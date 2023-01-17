@@ -1,0 +1,19 @@
+ node_file_name = ../cases/HV1_earlyDiastole_BiVen/heart_real.1.node
+ elem_file_name = ../cases/HV1_earlyDiastole_BiVen/heart_real.1.ele.Libmesh.dat
+ exodus_output_name = ../cases/HV1_earlyDiastole_BiVen/LVtrunk_heart_exodusII.e
+ xda_output_name = ../cases/HV1_earlyDiastole_BiVen/LVtrunk_heart_real.xda
+ result_output_name = ../cases/HV1_earlyDiastole_BiVen/result.e
+ fibreDir_output_name = ../cases/HV1_earlyDiastole_BiVen/fibreDir.txt
+ sheetDir_output_name = ../cases/HV1_earlyDiastole_BiVen/sheetDir.txt
+
+
+
+# 1 means use, 0 no 
+#using_AHASegments = 0
+#AHA_segments_file_name = ../cases/RV-LV/AHASeg.dat
+#AHA_degree_file_name = ../cases/RV-LV/AHADegree.dat
+
+
+# if using_AHASegments = 0, then provide the f
+fibre_angle = 60.0
+sheet_angle = 45.0

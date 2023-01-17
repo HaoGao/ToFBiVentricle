@@ -1,0 +1,5 @@
+viz_*
+main3d
+*.o
+*.d
+cases/*

@@ -1,3 +1,8 @@
+*.mp4
+model_generation/old/
+model_generation/Results/
+*.asv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

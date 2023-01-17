@@ -1,0 +1,7 @@
+5.603698		 alpha0
+0.333074		 w1 for endocardial surface
+0.523745		 w1 for epicardial surface
+22.108007		upper bound of u coordinate (in degree)
+-85.518271		lower bound of u coordinate (in degree)
+0.071625		 sdw1/w1 for endocardial surface
+0.053006		 sdw2/w2 for epicardial surface
