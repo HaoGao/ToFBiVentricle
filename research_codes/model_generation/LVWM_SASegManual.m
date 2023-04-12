@@ -5,7 +5,7 @@ clc;
 
 % LVWM_config;
 LVWM_config;
-fresh_segB = 1;
+fresh_segB = 0;
 segB = 1;
 
 cd(resultDir);
@@ -34,7 +34,6 @@ cd(phase_resultDir);
 if ~exist('DataSegSA.mat', 'file')
     fresh_segB = 1;
 end
-fresh_segB=0;
 
 if fresh_segB == 1
    %%%initialize 
@@ -106,9 +105,10 @@ if segB == 1
                 endo_lv=[];
                 endo_rv=[];
                 endo_pa=[];
-                epi_c=[];
-                epi_crv=[];
-                epi_cpa=[];
+                epi_biv=[];%epi boundaries for LV and RV
+                epi_rv=[];%epi boundaries for RV
+                epi_pa=[];%epi boundaries for PA
+                epi_lv=[];%epi boundaries for LV
                 endo_sample_lv = [];
                 endo_sample_rv = [];
                 endo_sample_pa = [];
@@ -125,178 +125,48 @@ if segB == 1
                 switch idxs
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     case 1
-                        but = 1;
-                        n=1;
-                        while but ==1 
-                            [x, y, but]=myginput(1,'crosshair');
-                            h2=plot(x,y,'b.');hold on;   
-                            choice = questdlg('LV: Would you like to continue?', ...
-                            'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                            switch choice
-                                case 'Yes'
-                                    endo_lv(1,n)=x;
-                                    endo_lv(2,n)=y;
-                                    n=n+1;
-                                case 'No'
-                                    endo_lv(1,n)=x;
-                                    endo_lv(2,n)=y;
-                                    n=n+1;
-                                    endo_lv(1,n)=endo_lv(1,1);
-                                    endo_lv(2,n)=endo_lv(2,1);
-                                    break
-                                case 'Delete'
-                                    delete(h2)
-                            end
+                        disp('.............................................');
+                        disp('predefined boundaries are plotted in red');
+                        disp('define points in the boundary by click points')
+                        disp('press stop, then click the last point');
+                        disp('press replot to generate the curve');
+                        disp('whenever change the point position, using replot to regenerate the curve');
+                        disp('double press space key to return from boudnary definition');
                     
-                        end
-                        plot(endo_lv(1,:),endo_lv(2,:),'b');
-
-                        but = 1;
-                        n=1;
-                        while but ==1 
-                            [x, y, but]=myginput(1,'crosshair');
-                            h2=plot(x,y,'y.');hold on;   
-                            choice = questdlg('RV: Would you like to continue?', ...
-                            'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                            switch choice
-                                case 'Yes'
-                                    endo_rv(1,n)=x;
-                                    endo_rv(2,n)=y;
-                                    n=n+1;
-                                case 'No'
-                                    endo_rv(1,n)=x;
-                                    endo_rv(2,n)=y;
-                                    n=n+1;
-                                    endo_rv(1,n)=endo_rv(1,1);
-                                    endo_rv(2,n)=endo_rv(2,1);
-                                    break
-                                case 'Delete'
-                                    delete(h2)
-                            end
-                    
-                        end
-                        plot(endo_rv(1,:),endo_rv(2,:),'y');
+                        [endo_lv, hpts_endo_lv]=defineBoundaryByimpoint_2023(imCropData, [], 1, 'LV endo');
+                 
+                        [endo_rv, hpts_endo_rv]=defineBoundaryByimpoint_2023(imCropData, endo_lv, 1, 'RV endo');
+                        
+                        [epi_biv, hpts_epi_biv]=defineBoundaryByimpoint_2023(imCropData, [endo_lv endo_rv], 1, 'RV endo');
                 
-                
-                        n=1;but=1;
-                        while but==1
-                            [x, y, but]=myginput(1, 'crosshair');
-                            h2=plot(x,y,'r.');hold on;
-                            choice = questdlg('Epi: Would you like to continue?', ...
-                            'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                            switch choice
-                                case 'Yes'
-                                    epi_c(1,n)=x;
-                                    epi_c(2,n)=y;
-                                    n=n+1;
-                                case 'No'
-                                    epi_c(1,n)=x;
-                                    epi_c(2,n)=y;
-                                    n=n+1;
-                                    epi_c(1,n)=epi_c(1,1);
-                                    epi_c(2,n)=epi_c(2,1);
-                                    break
-                                case 'Delete'
-                                    delete(h2)
-                            end
-                        end
-                        plot(epi_c(1,:),epi_c(2,:),'r');
-                
-
+                      
+       
                         endo_sample_lv(1,:) = endo_lv(1,:) +rect(1);
                         endo_sample_lv(2,:) = endo_lv(2,:) +rect(2);
                         endo_sample_rv(1,:) = endo_rv(1,:) +rect(1);
                         endo_sample_rv(2,:) = endo_rv(2,:) +rect(2);
                         %endo_sample_pa(1,:) = endo_pa(1,:) +rect(1);
                         %endo_sample_pa(2,:) = endo_pa(2,:) +rect(2);
-                        epi_sample(1,:) = epi_c(1,:) +rect(1);
-                        epi_sample(2,:) = epi_c(2,:) +rect(2);
+                        epi_sample(1,:) = epi_biv(1,:) +rect(1);
+                        epi_sample(2,:) = epi_biv(2,:) +rect(2);
                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                        
-                    case 2
-
-                        but = 1;
-                        n=1;
-                        while but ==1 
-                            [x, y, but]=myginput(1,'crosshair');
-                            h2=plot(x,y,'y.');hold on;   
-                            choice = questdlg('RV: Would you like to continue?', ...
-                            'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                            switch choice
-                                case 'Yes'
-                                    endo_rv(1,n)=x;
-                                    endo_rv(2,n)=y;
-                                    n=n+1;
-                                case 'No'
-                                    endo_rv(1,n)=x;
-                                    endo_rv(2,n)=y;
-                                    n=n+1;
-                                    endo_rv(1,n)=endo_rv(1,1);
-                                    endo_rv(2,n)=endo_rv(2,1);
-                                    break
-                                case 'Delete'
-                                    delete(h2)
-                            end
-                    
-                        end
-                        plot(endo_rv(1,:),endo_rv(2,:),'y');
-
-                        but = 1;
-                        n=1;
-                        while but ==1 
-                            [x, y, but]=myginput(1,'crosshair');
-                            h2=plot(x,y,'y.');hold on;   
-                            choice = questdlg('PA: Would you like to continue?', ...
-                            'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                            switch choice
-                                case 'Yes'
-                                    endo_pa(1,n)=x;
-                                    endo_pa(2,n)=y;
-                                    n=n+1;
-                                case 'No'
-                                    endo_pa(1,n)=x;
-                                    endo_pa(2,n)=y;
-                                    n=n+1;
-                                    endo_pa(1,n)=endo_pa(1,1);
-                                    endo_pa(2,n)=endo_pa(2,1);
-                                    break
-                                case 'Delete'
-                                    delete(h2)
-                            end
-                    
-                        end
-                        plot(endo_pa(1,:),endo_pa(2,:),'y');
-                
-                        n=1;but=1;
-                        while but==1
-                            [x, y, but]=myginput(1, 'crosshair');
-                            h2=plot(x,y,'r.');hold on;
-                            choice = questdlg('Epi: Would you like to continue?', ...
-                            'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                            switch choice
-                                case 'Yes'
-                                    epi_c(1,n)=x;
-                                    epi_c(2,n)=y;
-                                    n=n+1;
-                                case 'No'
-                                    epi_c(1,n)=x;
-                                    epi_c(2,n)=y;
-                                    n=n+1;
-                                    epi_c(1,n)=epi_c(1,1);
-                                    epi_c(2,n)=epi_c(2,1);
-                                    break
-                                case 'Delete'
-                                    delete(h2)
-                            end
-                        end
-                        plot(epi_c(1,:),epi_c(2,:),'r');
-                
+                    case 2 % this case will not be used in general
+                        % RV endo, PA endo, RV+PA endo
+                        disp('.............................................');
+                        disp('predefined boundaries are plotted in red');
+                        disp('define points in the boundary by click points')
+                        disp('press stop, then click the last point');
+                        disp('press replot to generate the curve');
+                        disp('whenever change the point position, using replot to regenerate the curve');
+                        disp('double press space key to return from boudnary definition');
+                        
+                        [endo_rv, hpts_endo_rv]=defineBoundaryByimpoint_2023(imCropData, [], 1, 'RV endo');
+                        
+                        [endo_pa, hpts_endo_pa]=defineBoundaryByimpoint_2023(imCropData, endo_rv, 1, 'PA endo');
+                        
+                        [epi_pa_rv, hpts_endo_pa_rv]=defineBoundaryByimpoint_2023(imCropData, [endo_rv endo_pa], 1, 'PA RV epi');
+     
 
                         %endo_sample_lv(1,:) = endo_lv(1,:) +rect(1);
                         %endo_sample_lv(2,:) = endo_lv(2,:) +rect(2);
@@ -304,116 +174,26 @@ if segB == 1
                         endo_sample_rv(2,:) = endo_rv(2,:) +rect(2);
                         endo_sample_pa(1,:) = endo_pa(1,:) +rect(1);
                         endo_sample_pa(2,:) = endo_pa(2,:) +rect(2);
-                        epi_sample(1,:) = epi_c(1,:) +rect(1);
-                        epi_sample(2,:) = epi_c(2,:) +rect(2);
+                        epi_sample(1,:) = epi_pa_rv(1,:) +rect(1);
+                        epi_sample(2,:) = epi_pa_rv(2,:) +rect(2);
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
                         
-                    case 3
-                        but = 1;
-                        n=1;
-                        while but ==1 
-                            [x, y, but]=myginput(1,'crosshair');
-                            h2=plot(x,y,'y.');hold on;   
-                            choice = questdlg('RV: Would you like to continue?', ...
-                            'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                            switch choice
-                                case 'Yes'
-                                    endo_rv(1,n)=x;
-                                    endo_rv(2,n)=y;
-                                    n=n+1;
-                                case 'No'
-                                    endo_rv(1,n)=x;
-                                    endo_rv(2,n)=y;
-                                    n=n+1;
-                                    endo_rv(1,n)=endo_rv(1,1);
-                                    endo_rv(2,n)=endo_rv(2,1);
-                                    break
-                                case 'Delete'
-                                    delete(h2)
-                            end
-                    
-                        end
-                        plot(endo_rv(1,:),endo_rv(2,:),'y');
+                    case 3     
+                        % RV endo, RV epi, PA endo, PA epi
+                        disp('.............................................');
+                        disp('predefined boundaries are plotted in red');
+                        disp('define points in the boundary by click points')
+                        disp('press stop, then click the last point');
+                        disp('press replot to generate the curve');
+                        disp('whenever change the point position, using replot to regenerate the curve');
+                        disp('double press space key to return from boudnary definition');
                         
-                        n=1;but=1;
-                        while but==1
-                            [x, y, but]=myginput(1, 'crosshair');
-                            h2=plot(x,y,'r.');hold on;
-                            choice = questdlg('RV-EPI: Would you like to continue?', ...
-                            'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                            switch choice
-                                case 'Yes'
-                                    epi_crv(1,n)=x;
-                                    epi_crv(2,n)=y;
-                                    n=n+1;
-                                case 'No'
-                                    epi_crv(1,n)=x;
-                                    epi_crv(2,n)=y;
-                                    n=n+1;
-                                    epi_crv(1,n)=epi_crv(1,1);
-                                    epi_crv(2,n)=epi_crv(2,1);
-                                    break
-                                case 'Delete'
-                                    delete(h2)
-                            end
-                        end
-                        plot(epi_crv(1,:),epi_crv(2,:),'r');
+                        [endo_rv, hpts_endo_rv]=defineBoundaryByimpoint_2023(imCropData, [], 1, 'RV endo');
+                        [epi_rv, hpts_epi_rv]=defineBoundaryByimpoint_2023(imCropData, endo_rv, 1, 'RV epi');
+                        [endo_pa, hpts_endo_pa]=defineBoundaryByimpoint_2023(imCropData, [endo_rv epi_rv], 1, 'PA endo');
+                        [epi_pa, hpts_epi_pa]=defineBoundaryByimpoint_2023(imCropData, endo_pa, 1, 'PA epi');
                         
-
-                        but = 1;
-                        n=1;
-                        while but ==1 
-                            [x, y, but]=myginput(1,'crosshair');
-                            h2=plot(x,y,'y.');hold on;   
-                            choice = questdlg('PA: Would you like to continue?', ...
-                            'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                            switch choice
-                                case 'Yes'
-                                    endo_pa(1,n)=x;
-                                    endo_pa(2,n)=y;
-                                    n=n+1;
-                                case 'No'
-                                    endo_pa(1,n)=x;
-                                    endo_pa(2,n)=y;
-                                    n=n+1;
-                                    endo_pa(1,n)=endo_pa(1,1);
-                                    endo_pa(2,n)=endo_pa(2,1);
-                                    break
-                                case 'Delete'
-                                    delete(h2)
-                            end
-                    
-                        end
-                        plot(endo_pa(1,:),endo_pa(2,:),'y');
-                
-                        
-                        n=1;but=1;
-                        while but==1
-                            [x, y, but]=myginput(1, 'crosshair');
-                            h2=plot(x,y,'r.');hold on;
-                            choice = questdlg('PA-Epi: Would you like to continue?', ...
-                            'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                            switch choice
-                                case 'Yes'
-                                    epi_cpa(1,n)=x;
-                                    epi_cpa(2,n)=y;
-                                    n=n+1;
-                                case 'No'
-                                    epi_cpa(1,n)=x;
-                                    epi_cpa(2,n)=y;
-                                    n=n+1;
-                                    epi_cpa(1,n)=epi_cpa(1,1);
-                                    epi_cpa(2,n)=epi_cpa(2,1);
-                                    break
-                                case 'Delete'
-                                    delete(h2)
-                            end
-                        end
-                        plot(epi_cpa(1,:),epi_cpa(2,:),'r');                
+                                       
 
                         %endo_sample_lv(1,:) = endo_lv(1,:) +rect(1);
                         %endo_sample_lv(2,:) = endo_lv(2,:) +rect(2);
@@ -421,74 +201,34 @@ if segB == 1
                         endo_sample_rv(2,:) = endo_rv(2,:) +rect(2);
                         endo_sample_pa(1,:) = endo_pa(1,:) +rect(1);
                         endo_sample_pa(2,:) = endo_pa(2,:) +rect(2);
-                        epi_sample_rv(1,:) = epi_crv(1,:) +rect(1);
-                        epi_sample_rv(2,:) = epi_crv(2,:) +rect(2);
-                        epi_sample_pa(1,:) = epi_cpa(1,:) +rect(1);
-                        epi_sample_pa(2,:) = epi_cpa(2,:) +rect(2);
+                        epi_sample_rv(1,:) = epi_rv(1,:) +rect(1);
+                        epi_sample_rv(2,:) = epi_rv(2,:) +rect(2);
+                        epi_sample_pa(1,:) = epi_pa(1,:) +rect(1);
+                        epi_sample_pa(2,:) = epi_pa(2,:) +rect(2);
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                         
                     case 4
-                        but = 1;
-                        n=1;
-                        while but ==1 
-                            [x, y, but]=myginput(1,'crosshair');
-                            h2=plot(x,y,'y.');hold on;   
-                            choice = questdlg('PA: Would you like to continue?', ...
-                            'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                            switch choice
-                                case 'Yes'
-                                    endo_pa(1,n)=x;
-                                    endo_pa(2,n)=y;
-                                    n=n+1;
-                                case 'No'
-                                    endo_pa(1,n)=x;
-                                    endo_pa(2,n)=y;
-                                    n=n+1;
-                                    endo_pa(1,n)=endo_pa(1,1);
-                                    endo_pa(2,n)=endo_pa(2,1);
-                                    break
-                                case 'Delete'
-                                    delete(h2)
-                            end
-                    
-                        end
-                        plot(endo_pa(1,:),endo_pa(2,:),'y');
-                
-                        n=1;but=1;
-                        while but==1
-                            [x, y, but]=myginput(1, 'crosshair');
-                            h2=plot(x,y,'r.');hold on;
-                            choice = questdlg('PA-Epi: Would you like to continue?', ...
-                            'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                            switch choice
-                                case 'Yes'
-                                    epi_cpa(1,n)=x;
-                                    epi_cpa(2,n)=y;
-                                    n=n+1;
-                                case 'No'
-                                    epi_cpa(1,n)=x;
-                                    epi_cpa(2,n)=y;
-                                    n=n+1;
-                                    epi_cpa(1,n)=epi_cpa(1,1);
-                                    epi_cpa(2,n)=epi_cpa(2,1);
-                                    break
-                                case 'Delete'
-                                    delete(h2)
-                            end
-                        end
-                        plot(epi_cpa(1,:),epi_cpa(2,:),'r');
-                
-
+                        % PA endo; PA epi 
+                        disp('.............................................');
+                        disp('predefined boundaries are plotted in red');
+                        disp('define points in the boundary by click points')
+                        disp('press stop, then click the last point');
+                        disp('press replot to generate the curve');
+                        disp('whenever change the point position, using replot to regenerate the curve');
+                        disp('double press space key to return from boudnary definition');
+                        
+                        [endo_pa, hpts_endo_pa]=defineBoundaryByimpoint_2023(imCropData, [], 1, 'PA endo');
+                        [epi_pa, hpts_epi_pa]=defineBoundaryByimpoint_2023(imCropData, endo_pa, 1, 'PA epi');
+                        
+           
                         %endo_sample_lv(1,:) = endo_lv(1,:) +rect(1);
                         %endo_sample_lv(2,:) = endo_lv(2,:) +rect(2);
                         %endo_sample_rv(1,:) = endo_rv(1,:) +rect(1);
                         %endo_sample_rv(2,:) = endo_rv(2,:) +rect(2);
                         endo_sample_pa(1,:) = endo_pa(1,:) +rect(1);
                         endo_sample_pa(2,:) = endo_pa(2,:) +rect(2);
-                        epi_sample_pa(1,:) = epi_cpa(1,:) +rect(1);
-                        epi_sample_pa(2,:) = epi_cpa(2,:) +rect(2);
+                        epi_sample_pa(1,:) = epi_pa(1,:) +rect(1);
+                        epi_sample_pa(2,:) = epi_pa(2,:) +rect(2);
                      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     otherwise
                         disp('Wrong Input, Try Again')
@@ -496,26 +236,38 @@ if segB == 1
                 
             
                 h1=figure();
-                imshow(imData,[]); hold on;
+                imshow(imCropData,[]); hold on;
                 title(sliceLocationStr);
                 if ~isempty(endo_sample_lv)
-                    plot(endo_sample_lv(1,:),endo_sample_lv(2,:),'b');
+                    bc_interp = samplingBCWithoutIm_interp(endo_sample_lv, 1);
+                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'b', 'LineWidth', 1);
                 end
                 if ~isempty(endo_sample_rv)
-                    plot(endo_sample_rv(1,:),endo_sample_rv(2,:),'b');
+                    bc_interp = samplingBCWithoutIm_interp(endo_sample_rv, 1);
+                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'b', 'LineWidth', 1);
                 end
                 if ~isempty(endo_sample_pa)
-                    plot(endo_sample_pa(1,:),endo_sample_pa(2,:),'g');
+                    bc_interp = samplingBCWithoutIm_interp(endo_sample_pa, 1);
+                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'g', 'LineWidth', 1);
                 end
                 if ~isempty(epi_sample)
-                     plot(epi_sample(1,:),epi_sample(2,:),'r');
+                     bc_interp = samplingBCWithoutIm_interp(epi_sample, 1);
+                     plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'r', 'LineWidth', 1);
                 end
                 if ~isempty(epi_sample_rv)
-                     plot(epi_sample_rv(1,:),epi_sample_rv(2,:),'r');
+                    bc_interp = samplingBCWithoutIm_interp(epi_sample_rv, 1);
+                     plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'r', 'LineWidth', 1);
                 end
                 if ~isempty(epi_sample_pa)
-                     plot(epi_sample_pa(1,:),epi_sample_pa(2,:),'r');
+                    bc_interp = samplingBCWithoutIm_interp(epi_sample_pa, 1);
+                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'r', 'LineWidth', 1);
                 end
+                
+                %save the figure with boundaries
+                cd(phase_resultDir);
+                figure_name = sprintf('SA-%d.png',imIndex);
+                print(h1,figure_name, '-dpng', '-r300');
+                cd(workingDir);
                 
                 if ~isempty(endo_sample_lv)
                     endo_lvReal = TransformCurvesFromImToRealSpace(endo_sample_lv,imInfo);
