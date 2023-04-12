@@ -1,6 +1,0 @@
-the dimension 
-[-1 1] for both x and y
-
-f = 1
-
-all boundaries have values of 1 also
