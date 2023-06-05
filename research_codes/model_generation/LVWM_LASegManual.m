@@ -115,7 +115,9 @@ if segB == 1
                 disp('press replot to generate the curve');
                 disp('whenever change the point position, using replot to regenerate the curve');
                 disp('double press space key to return from boudnary definition');
-                        
+                 
+                choice = questdlg('LV endo: Would you like to continue?', ...
+                        'Dessert Menu', 'Yes','No','Yes');  
                 [endo_lv, hpts_endo_lv]=defineBoundaryByimpoint_2023(imCropData, [], 0, 'LV endo');
                         
                 choice = questdlg('RV endo: Would you like to continue?', ...
@@ -124,11 +126,14 @@ if segB == 1
                     case 'Yes'
                        [endo_rv, hpts_endo_rv]=defineBoundaryByimpoint_2023(imCropData, endo_lv, 0, 'RV endo'); 
                 end
+                
+                choice = questdlg('EPI: Would you like to continue?', ...
+                        'Dessert Menu', 'Yes','No','Yes');  
                 [epi_c, hpts_epi_c]=defineBoundaryByimpoint_2023(imCropData, [endo_lv, endo_rv], 0, 'epi bc');
                          
                 endo_sample_lv(1,:) = endo_lv(1,:) +rect(1);
                 endo_sample_lv(2,:) = endo_lv(2,:) +rect(2);
-                if ~isempty(endo_sample_rv)
+                if ~isempty(endo_rv)
                     endo_sample_rv(1,:) = endo_rv(1,:) +rect(1);
                     endo_sample_rv(2,:) = endo_rv(2,:) +rect(2);
                 end

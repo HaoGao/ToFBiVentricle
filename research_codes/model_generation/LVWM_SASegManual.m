@@ -1,7 +1,12 @@
-%%%SA segmentation
-clear all;
-close all;
-clc;
+%% SA segmentation
+%% updated on 15th May 2023, based on Debao Guan's modification
+% 4 choices, all results are saved in DataSegSA data structure
+% option 1: biventricle boundaries: LV+RV, saved in endo_lv, endo_rv and epi_c
+% option 2: LV+RV+PA, saved in endo_lv, endo_rv, endo_pa, epi_c, epi_crv, epi_cpa
+% option 3: RV + RA, saved in endo_rv, epi_crv, endo_pa, endo_rv
+% option 4: PA, saved in in endo_pa, endo_rv
+
+clear all; close all; clc;
 
 % LVWM_config;
 LVWM_config;
@@ -105,10 +110,10 @@ if segB == 1
                 endo_lv=[];
                 endo_rv=[];
                 endo_pa=[];
-                epi_biv=[];%epi boundaries for LV and RV
-                epi_rv=[];%epi boundaries for RV
-                epi_pa=[];%epi boundaries for PA
-                epi_lv=[];%epi boundaries for LV
+                epi_biv=[];%epi boundaries for LV and RV or for LV epi 
+                epi_crv=[];%epi boundaries for RV
+                epi_cpa=[];%epi boundaries for PA
+
                 endo_sample_lv = [];
                 endo_sample_rv = [];
                 endo_sample_pa = [];
@@ -116,7 +121,7 @@ if segB == 1
                 epi_sample_rv = [];
                 epi_sample_pa = [];
                 
-                list_phaseS = {'Case 1: LV-RV-EPI', 'Case 2: RV-PA-EPI', ...
+                list_phaseS = {'Case 1: LV-RV-EPI', 'Case 2: LV-EPI-RV-EPI-PA-EPI', ...
                     'Case 3: RV-EPI-PA-EPI','Case 4: PA-EPI'};
                 [idxs, tfs] = listdlg('PromptString',{'Select a case.', ...
                     'Only one file can be selected at a time.',...
@@ -133,11 +138,20 @@ if segB == 1
                         disp('whenever change the point position, using replot to regenerate the curve');
                         disp('double press space key to return from boudnary definition');
                     
+					    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LV ENDO
+                        choice = questdlg('LV-ENDO: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');
                         [endo_lv, hpts_endo_lv]=defineBoundaryByimpoint_2023(imCropData, [], 1, 'LV endo');
                  
+				        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  RV ENDO
+                        choice = questdlg('RV_ENDO: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');
                         [endo_rv, hpts_endo_rv]=defineBoundaryByimpoint_2023(imCropData, endo_lv, 1, 'RV endo');
                         
-                        [epi_biv, hpts_epi_biv]=defineBoundaryByimpoint_2023(imCropData, [endo_lv endo_rv], 1, 'RV endo');
+						%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% BIV-EPI
+                        choice = questdlg('LV_RV_EPI: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');									  
+                        [epi_biv, hpts_epi_biv]=defineBoundaryByimpoint_2023(imCropData, [endo_lv endo_rv], 1, 'LV_RV_EPI');
                 
                       
        
@@ -151,7 +165,7 @@ if segB == 1
                         epi_sample(2,:) = epi_biv(2,:) +rect(2);
                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                        
-                    case 2 % this case will not be used in general
+                    case 2 % this case will may not often to see
                         % RV endo, PA endo, RV+PA endo
                         disp('.............................................');
                         disp('predefined boundaries are plotted in red');
@@ -161,21 +175,50 @@ if segB == 1
                         disp('whenever change the point position, using replot to regenerate the curve');
                         disp('double press space key to return from boudnary definition');
                         
-                        [endo_rv, hpts_endo_rv]=defineBoundaryByimpoint_2023(imCropData, [], 1, 'RV endo');
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LV ENDO
+						choice = questdlg('LV-ENDO: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');
+                        [endo_lv, hpts_endo_lv]=defineBoundaryByimpoint_2023(imCropData, [], 1, 'LV endo');
+
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LV EPI
+                        choice = questdlg('LV_EPI: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');
+						[epi_biv, hpts_epi_biv]=defineBoundaryByimpoint_2023(imCropData, endo_lv, 1, 'LV EPI');
+						%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RV ENDO
+                        choice = questdlg('RV_ENDO: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');														 
+
+                        [endo_rv, hpts_endo_rv]=defineBoundaryByimpoint_2023(imCropData, [endo_lv epi_biv], 1, 'RV endo');
+						%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RV EPI
+                        choice = questdlg('RV_EPI: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');
+
+                        [epi_rv, hpts_epi_rv]=defineBoundaryByimpoint_2023(imCropData, [endo_lv epi_biv endo_rv], 1, 'RV EPI');
                         
-                        [endo_pa, hpts_endo_pa]=defineBoundaryByimpoint_2023(imCropData, endo_rv, 1, 'PA endo');
+						%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PA ENDO
+                        choice = questdlg('PA_ENDO: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');
+                        [endo_pa, hpts_endo_pa]=defineBoundaryByimpoint_2023(imCropData, [endo_lv epi_biv endo_rv epi_rv], 1, 'PA endo');
                         
-                        [epi_pa_rv, hpts_endo_pa_rv]=defineBoundaryByimpoint_2023(imCropData, [endo_rv endo_pa], 1, 'PA RV epi');
+						%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PA EPI
+                        choice = questdlg('PA_EPI: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');
+                        [epi_pa, hpts_epi_pa]=defineBoundaryByimpoint_2023(imCropData, [endo_lv epi_biv endo_rv epi_rv endo_pa], 1, 'PA EPI');
      
 
-                        %endo_sample_lv(1,:) = endo_lv(1,:) +rect(1);
-                        %endo_sample_lv(2,:) = endo_lv(2,:) +rect(2);
+                        endo_sample_lv(1,:) = endo_lv(1,:) +rect(1);
+                        endo_sample_lv(2,:) = endo_lv(2,:) +rect(2);
+                        epi_sample(1,:) = epi_biv(1,:) +rect(1);
+                        epi_sample(2,:) = epi_biv(2,:) +rect(2);
                         endo_sample_rv(1,:) = endo_rv(1,:) +rect(1);
                         endo_sample_rv(2,:) = endo_rv(2,:) +rect(2);
+                        epi_sample_rv(1,:) = epi_rv(1,:) +rect(1);
+                        epi_sample_rv(2,:) = epi_rv(2,:) +rect(2);
                         endo_sample_pa(1,:) = endo_pa(1,:) +rect(1);
                         endo_sample_pa(2,:) = endo_pa(2,:) +rect(2);
-                        epi_sample(1,:) = epi_pa_rv(1,:) +rect(1);
-                        epi_sample(2,:) = epi_pa_rv(2,:) +rect(2);
+                        epi_sample_pa(1,:) = epi_pa(1,:) +rect(1);
+                        epi_sample_pa(2,:) = epi_pa(2,:) +rect(2);
+                
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
                         
                     case 3     
@@ -188,13 +231,27 @@ if segB == 1
                         disp('whenever change the point position, using replot to regenerate the curve');
                         disp('double press space key to return from boudnary definition');
                         
+						%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RV ENDO
+                        choice = questdlg('RV_ENDO: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');
                         [endo_rv, hpts_endo_rv]=defineBoundaryByimpoint_2023(imCropData, [], 1, 'RV endo');
-                        [epi_rv, hpts_epi_rv]=defineBoundaryByimpoint_2023(imCropData, endo_rv, 1, 'RV epi');
+						
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RV EPI
+                        choice = questdlg('RV_EPI: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');
+						[epi_rv, hpts_epi_rv]=defineBoundaryByimpoint_2023(imCropData, endo_rv, 1, 'RV epi');
+						
+						%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PA ENDO
+                        choice = questdlg('PA_ENDO: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');
                         [endo_pa, hpts_endo_pa]=defineBoundaryByimpoint_2023(imCropData, [endo_rv epi_rv], 1, 'PA endo');
-                        [epi_pa, hpts_epi_pa]=defineBoundaryByimpoint_2023(imCropData, endo_pa, 1, 'PA epi');
                         
-                                       
-
+						%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PA EPI
+                        choice = questdlg('PA_EPI: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');
+						[epi_pa, hpts_epi_pa]=defineBoundaryByimpoint_2023(imCropData, endo_pa, 1, 'PA epi');
+                        
+                                      
                         %endo_sample_lv(1,:) = endo_lv(1,:) +rect(1);
                         %endo_sample_lv(2,:) = endo_lv(2,:) +rect(2);
                         endo_sample_rv(1,:) = endo_rv(1,:) +rect(1);
@@ -217,7 +274,14 @@ if segB == 1
                         disp('whenever change the point position, using replot to regenerate the curve');
                         disp('double press space key to return from boudnary definition');
                         
+						%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PA ENDO
+                        choice = questdlg('PA_ENDO: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');
                         [endo_pa, hpts_endo_pa]=defineBoundaryByimpoint_2023(imCropData, [], 1, 'PA endo');
+						
+						%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PA EPI
+                        choice = questdlg('PA_EPI: Would you like to START?', ...
+                            'Dessert Menu', 'Yes','No','Yes');
                         [epi_pa, hpts_epi_pa]=defineBoundaryByimpoint_2023(imCropData, endo_pa, 1, 'PA epi');
                         
            
@@ -240,27 +304,27 @@ if segB == 1
                 title(sliceLocationStr);
                 if ~isempty(endo_sample_lv)
                     bc_interp = samplingBCWithoutIm_interp(endo_sample_lv, 1);
-                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'b', 'LineWidth', 1);
+                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'b-');
                 end
                 if ~isempty(endo_sample_rv)
                     bc_interp = samplingBCWithoutIm_interp(endo_sample_rv, 1);
-                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'b', 'LineWidth', 1);
+                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'b-');
                 end
                 if ~isempty(endo_sample_pa)
                     bc_interp = samplingBCWithoutIm_interp(endo_sample_pa, 1);
-                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'g', 'LineWidth', 1);
+                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'g-');
                 end
                 if ~isempty(epi_sample)
                      bc_interp = samplingBCWithoutIm_interp(epi_sample, 1);
-                     plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'r', 'LineWidth', 1);
+                     plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'r-');
                 end
                 if ~isempty(epi_sample_rv)
                     bc_interp = samplingBCWithoutIm_interp(epi_sample_rv, 1);
-                     plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'r', 'LineWidth', 1);
+                     plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'r-');
                 end
                 if ~isempty(epi_sample_pa)
                     bc_interp = samplingBCWithoutIm_interp(epi_sample_pa, 1);
-                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'r', 'LineWidth', 1);
+                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'r-');
                 end
                 
                 %save the figure with boundaries
@@ -304,7 +368,7 @@ if segB == 1
                 DataSegSA(imIndex).endo_lv = endo_sample_lv;
                 DataSegSA(imIndex).endo_rv = endo_sample_rv;
                 DataSegSA(imIndex).endo_pa = endo_sample_pa;
-                DataSegSA(imIndex).epi_c = epi_sample;
+                DataSegSA(imIndex).epi_c = epi_sample;% epi_c either save the bi-ventricle epi or only the LV epi when epi_crv is not empty
                 DataSegSA(imIndex).epi_crv = epi_sample_rv;
                 DataSegSA(imIndex).epi_cpa = epi_sample_pa;
                 DataSegSA(imIndex).endo_lvReal = endo_lvReal;

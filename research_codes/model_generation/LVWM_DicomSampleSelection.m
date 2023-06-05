@@ -1,7 +1,5 @@
 %%%%select the proper dicom images for short axis and long axis
-clear all; 
-close all;
-clc;
+clear all; close all; clc;
 
 LVWM_config;
 
