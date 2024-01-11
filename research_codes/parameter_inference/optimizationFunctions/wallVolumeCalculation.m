@@ -4,15 +4,19 @@ function [vol_ori, vol_updated] = wallVolumeCalculation(nodes, elems,...
 workingDir = pwd();
 cd(abaqusDir);
 displacement = load(abaqus_dis_out_filename);
+idx=[];
+[~,idx] = sort(displacement(:,1)); % sort just the first column
+displacement = displacement(idx,:);
+
 cd(workingDir);
 
 nodes_x = nodes(:,1);
 nodes_y = nodes(:,2);
 nodes_z = nodes(:,3);
 
-dis_x = displacement(:,2);
-dis_y = displacement(:,3);
-dis_z = displacement(:,4);
+dis_x = displacement(1:length(nodes),2);
+dis_y = displacement(1:length(nodes),3);
+dis_z = displacement(1:length(nodes),4);
 
 nodes_x_update = nodes_x + dis_x;
 nodes_y_update = nodes_y + dis_y;

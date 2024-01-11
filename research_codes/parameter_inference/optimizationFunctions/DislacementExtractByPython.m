@@ -1,10 +1,12 @@
 function DislacementExtractByPython(abaqusSimulationDir,abaqus_inputfile,...
     pythonOriginalFilesDir,pythonfile, lineNoForODBName, lineNoForDisName,...
-    abaqus_dis_out_filename)
+    abaqus_dis_out_filename, abaqus_command)
 
 workingDir = pwd();
+
 %%%abaqus odb file name
-abaqus_odb_name = sprintf('%s.odb',abaqus_inputfile);
+[~, abaqusInputfileName, ~]= fileparts(abaqus_inputfile);
+abaqus_odb_name = sprintf('%s.odb',abaqusInputfileName);
 
 %%%need to change some lines in pythonfile
 cd(pythonOriginalFilesDir);
@@ -31,7 +33,7 @@ fclose(fid_python_updated);
 fclose(fid_python);
 %%%now run the python file to get the displacement
 cd(abaqusSimulationDir);
-command = sprintf('abaqus python abaqus_dis_up.py -odb, %s',abaqus_odb_name);
+command = sprintf('%s python abaqus_dis_up.py -odb, %s',abaqus_command, abaqus_odb_name);
 dos(command);
 
 

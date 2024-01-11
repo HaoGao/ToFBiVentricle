@@ -15,7 +15,7 @@ myAssembly = myOdb.rootAssembly
 #   part instances 
 #
 # creat variables that refer to the first two steps
-secondStep = myOdb.steps['Step-1']
+secondStep = myOdb.steps['Preload']
 
 # Read displacement data from the last frame
 # of the second steps.

@@ -4,7 +4,7 @@ workingDir = pwd();
 global optimize_opt;
 opt_log_filename = optimize_opt.logfile_name ;
 abaqusDir = optimize_opt.abaqusSimulationDir;
-weighting_varifold=optimize_opt.weighting_varifold;
+%weighting_varifold=optimize_opt.weighting_varifold;
 
 % mpara = options.mpara;
 
@@ -42,6 +42,7 @@ timestr =  datestr(clock());
 fprintf(fid_log, '\n');
 fprintf(fid_log, 'Step 2 optimization for Ca Cb based on Klotz curve on %s\n', timestr);
 fprintf(fid_log, 'one iteration begins in obj_ca_cb_klotz: %s\n',timestr);
+fclose(fid_log);
 
 
 %% calling one forward simulation with provided 8 unknown parameters 
@@ -49,8 +50,12 @@ fprintf(fid_log, 'one iteration begins in obj_ca_cb_klotz: %s\n',timestr);
 ResSim = BiVenPassiveForwardSimulationMatPres(optimize_opt, ...
                                             A, B, Af, Bf, An, Bn, Afs, Bfs, ...
                                            Ca_RV, press);
+cd(abaqusDir);
+fid_log = fopen(opt_log_filename ,'a');
+cd(workingDir);
 fprintf(fid_log, 'finish one simulation with %f mmHg\n\n', press);
-                                            
+fclose(fid_log);
+
 %% the LV volume: ResSim.ResVol.LV_vol_update
 %% the RV volume: Resim.ResVol.RV_vol_update
 %% from measurement: optimize_opt.BiVentricleVolume.LV_end_diastole
@@ -79,22 +84,26 @@ Vpred = klotz_predictive_volume(press, LVEDVMRI, V0, Ppred);
 ResSim_high = BiVenPassiveForwardSimulationMatPres(optimize_opt, ...
                                             A, B, Af, Bf, An, Bn, Afs, Bfs, ...
                                            Ca_RV, Ppred);
+cd(abaqusDir);
+fid_log = fopen(opt_log_filename ,'a');
+cd(workingDir);
 fprintf(fid_log, 'finish one simulation with %f mmHg with volume: %f (%f klotz) \n\n', ...
                     Ppred, ResSim_high.ResVol.LV_vol_update,Vpred);
+fclose(fid_log);
 
 V_high = ResSim_high.ResVol.LV_vol_update;
 SumError = (Vpred - V_high)/Vpred;
 
 
-%% here we can try to use the varifold_distance to define the distance 
-abaqusInput = optimize_opt.abaqusInput;
-abaqusInput_end_diastole = optimize_opt.abaqusInput_end_diastole;
-cd(abaqusDir);
-dis = load(optimize_opt.abaqus_dis_out_filename); 
-cd(workingDir);
-[vari_dis, vari_dis_LV_endo] = varifold_distance_abaqus(abaqusInput, abaqusInput_end_diastole, dis);
-vari_dis_max = optimize_opt.vari_dis_max;
-feval_vari_fmincon = 3*weighting_varifold*(vari_dis.dis/(vari_dis_max.dis))^2;
+% %% here we can try to use the varifold_distance to define the distance 
+% abaqusInput = optimize_opt.abaqusInput;
+% abaqusInput_end_diastole = optimize_opt.abaqusInput_end_diastole;
+% cd(abaqusDir);
+% dis = load(optimize_opt.abaqus_dis_out_filename); 
+% cd(workingDir);
+% [vari_dis, vari_dis_LV_endo] = varifold_distance_abaqus(abaqusInput, abaqusInput_end_diastole, dis);
+% vari_dis_max = optimize_opt.vari_dis_max;
+% feval_vari_fmincon = 3*weighting_varifold*(vari_dis.dis/(vari_dis_max.dis))^2;
 
 
 %V0 = strainComparison.LVVolumeOri;
@@ -104,13 +113,18 @@ feval_vari_fmincon = 3*weighting_varifold*(vari_dis.dis/(vari_dis_max.dis))^2;
 %V_30_klotz = LVVolumeAba_30;
 %SumError = (V_30_klotz-V_30)/V_30; 
 
-feval_total_fmincon = sum(SumError.^2)+feval_total_fmincon + feval_total_RV_fmincon + feval_vari_fmincon;
+feval_total_fmincon = sum(SumError.^2)+feval_total_fmincon + feval_total_RV_fmincon;
+%feval_total_fmincon = feval_total_fmincon + feval_vari_fmincon;
 
 cd(abaqusDir);
-fid_loss = fopen('loss_function.data', 'a');
+fid_loss = fopen('loss_function.dat', 'a');
 cd(workingDir);
-fprintf(fid_loss, '%f\t %f\t %f\t %f\n', feval_total_fmincon,feval_total_fmincon,feval_total_RV_fmincon, feval_vari_fmincon);                 
+fprintf(fid_loss, '%f\t %f\t %f\n', feval_total_fmincon,feval_total_fmincon,feval_total_RV_fmincon);                 
+fclose(fid_loss);
 
+cd(abaqusDir);
+fid_log = fopen(opt_log_filename ,'a');
+cd(workingDir);
 fprintf(fid_log, 'abaqus running success for step 2 klotz: %d\n', ResSim.SuccessB);
 fprintf(fid_log, 'x updated:          %f,\t%f,\t%f,\t%f,\t%f,\t%f,\t%f,\t%f,\t%f\n', x(1), x(2), x(1), x(2), x(1), x(2), x(1), x(2), x(3));
 fprintf(fid_log, 'parameters updated: %f,\t%f,\t%f,\t%f,\t%f,\t%f,\t%f,\t%f, \t%f\n', A, B, Af, Bf, An, Bn, Afs, Bfs, Ca_RV);
@@ -120,7 +134,7 @@ fprintf(fid_log, 'Difference (total, LV volume, klotz, RV volume): %f\t %f\t %f\
                                        sqrt(sum(feval_total.^2)), sqrt(sum(SumError.^2)), sqrt(feval_total_RV_fmincon));
 fprintf(fid_log, 'EDV_high_sim: %f,\t EDV_high_predicted using klotz curve: %f with pressure %f\n', V_high, Vpred, Ppred);
 
-fprintf(fid_log, 'vari_dis: %f (max: %f)\n', vari_dis.dis, vari_dis_max.dis );
+% fprintf(fid_log, 'vari_dis: %f (max: %f)\n', vari_dis.dis, vari_dis_max.dis );
 fprintf(fid_log, 'one iteration ends\n');
 fprintf(fid_log, '\n');
 fclose(fid_log);

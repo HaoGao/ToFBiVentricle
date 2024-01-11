@@ -101,6 +101,7 @@ if patientConfigs(patientIndex,1).Brotation
               0 1 0;
               0 0 1];
     RotationMatrix = rightM/leftM;
+    RotationMatrix=RotationMatrix/(det(RotationMatrix))^(1/3);
     
     rotationConfig.SAXVec = SAXVec;
     rotationConfig.SAYVec = SAYVec;
@@ -460,6 +461,11 @@ hold on
 endo_lv_data=[];endo_rv_data=[];endo_pa_data=[];
 epi_c_data=[];epi_crv_data=[];epi_cpa_data=[];
 theta_new = linspace(-pi, pi-0.01, divd);
+
+long2axis=DataSegLARotated(2).epi_cReal;
+xleft=long2axis(1:2,1);
+xright=long2axis(1:2,length(long2axis));
+shortaxis=(xleft-xright)/norm(xright-xleft);
 %% endo_lv_data: [x_slice1; 
 %                 y_slice1; 
 %                 z_slice1;
@@ -482,7 +488,7 @@ for imIndex = 1 : size(DataSegSARotated, 2)
     epi_c_int=[];epi_crv_int=[];epi_cpa_int=[];
     if ~isempty(endo_lv)
         %%%%% lv
-        endo_lv_int=SA_INTERP2(endo_lv,theta_new);
+        endo_lv_int=SA_INTERP2(endo_lv,shortaxis);
         endo_lv_data=[endo_lv_data; endo_lv_int];
              
         plot3(endo_lv_int(1,:),endo_lv_int(2,:),endo_lv_int(3,:),'LineStyle', '-', 'Color', ...
@@ -491,7 +497,7 @@ for imIndex = 1 : size(DataSegSARotated, 2)
     end
     if ~isempty(endo_rv)
         %%%%% rv
-        endo_rv_int=SA_INTERP2(endo_rv,theta_new);
+        endo_rv_int=SA_INTERP2(endo_rv,shortaxis);
         endo_rv_data=[endo_rv_data; endo_rv_int];
         
         plot3(endo_rv_int(1,:),endo_rv_int(2,:),endo_rv_int(3,:),'LineStyle', '-', 'Color', ...
@@ -499,7 +505,7 @@ for imIndex = 1 : size(DataSegSARotated, 2)
     end
     if ~isempty(endo_pa)
         %%%%% rv
-        endo_pa_int=SA_INTERP2(endo_pa,theta_new);
+        endo_pa_int=SA_INTERP2(endo_pa,shortaxis);
         endo_pa_data=[endo_pa_data; endo_pa_int];
         
         plot3(endo_pa_int(1,:),endo_pa_int(2,:),endo_pa_int(3,:),'LineStyle', '-', 'Color', ...
@@ -509,7 +515,7 @@ for imIndex = 1 : size(DataSegSARotated, 2)
     
     if ~isempty(epi_c)      
         %%%%%% epi
-        epi_c_int=SA_INTERP2(epi_c,theta_new);
+        epi_c_int=SA_INTERP2(epi_c,shortaxis);
         epi_c_data=[epi_c_data; epi_c_int];
         
         plot3(epi_c_int(1,:),epi_c_int(2,:),epi_c_int(3,:),'LineStyle', '-', 'Color', ...
@@ -519,7 +525,7 @@ for imIndex = 1 : size(DataSegSARotated, 2)
 
     if ~isempty(epi_crv)
         %%%%%% epi rv
-        epi_crv_int=SA_INTERP2(epi_crv,theta_new);
+        epi_crv_int=SA_INTERP2(epi_crv,shortaxis);
         epi_crv_data=[epi_crv_data; epi_crv_int];
         
         plot3(epi_crv_int(1,:),epi_crv_int(2,:),epi_crv_int(3,:),'LineStyle', '-', 'Color', ...
@@ -529,7 +535,7 @@ for imIndex = 1 : size(DataSegSARotated, 2)
     
     if ~isempty(epi_cpa)    
         %%%%%% epi
-        epi_cpa_int=SA_INTERP2(epi_cpa,theta_new);
+        epi_cpa_int=SA_INTERP2(epi_cpa,shortaxis);
         epi_cpa_data=[epi_cpa_data; epi_cpa_int];
         
         plot3(epi_cpa_int(1,:),epi_cpa_int(2,:),epi_cpa_int(3,:),'LineStyle', '-', 'Color', ...
@@ -774,7 +780,7 @@ if ~isempty(endo_pa_data)
     min_z=(endo_pa_data(size(endo_pa_data,1),1)+endo_rv_data(rv_base,1))/2;
     max_z=endo_pa_data(3,1); 
     d4=(max_z-min_z)/4;
-    z_int= max_z:-d4:min_z; 
+    z_int= max_z:-d4:endo_pa_data(size(endo_pa_data,1),1);  %min_z; 
     new_data=[];
     for i=1:divd
         
@@ -834,7 +840,7 @@ if ~isempty(endo_pa_data)
     min_z=(epi_cpa_data(size(epi_cpa_data,1),1)+epi_c_data(rv_base,1))/2;
     max_z=epi_cpa_data(3,1); 
     d4=(max_z-min_z)/4;
-    z_int= max_z:-d4:min_z; 
+    z_int= max_z:-d4:epi_cpa_data(size(epi_cpa_data,1),1); %min_z; 
     new_data=[];
     for i=1:divd
         
@@ -1042,42 +1048,42 @@ if  ~isempty(LV_new_top) && ~isempty(PA_new_top) && ~isempty(RV_new_top)
 end
 
 
+axis equal
 
+%%
+        
+if Bwritten
+                    %%%output the bc boundaries
+   cd(phase_resultDir);
+   filename = sprintf('SA_LV.txt');
+   fidSA = fopen(filename,'w');
+   for i=1:size(LV_new,2)
+       fprintf(fidSA,'%14.10f \t%14.10f \t%14.10f\n',LV_new(1,i),LV_new(2,i),LV_new(3,i));
+   end
+   fclose(fidSA);
+   
+   filename = sprintf('SA_RV.txt');
+   fidSA = fopen(filename,'w');
+   for i=1:size(RV_new,2)
+       fprintf(fidSA,'%14.10f \t%14.10f \t%14.10f\n',RV_new(1,i),RV_new(2,i),RV_new(3,i));
+   end
+   fclose(fidSA);
+   
+   filename = sprintf('SA_EPI.txt');
+   fidSA = fopen(filename,'w');
+   for i=1:size(EPI_new,2)
+       fprintf(fidSA,'%14.10f \t%14.10f \t%14.10f\n',EPI_new(1,i),EPI_new(2,i),EPI_new(3,i));
+   end
+   fclose(fidSA);
 
-% %%
-%         
-% if Bwritten
-%                     %%%output the bc boundaries
-%    cd(phase_resultDir);
-%    filename = sprintf('SA_LV.txt');
-%    fidSA = fopen(filename,'w');
-%    for i=1:size(LV_new,2)
-%        fprintf(fidSA,'%14.10f \t%14.10f \t%14.10f\n',LV_new(1,i),LV_new(2,i),LV_new(3,i));
-%    end
-%    fclose(fidSA);
-%    
-%    filename = sprintf('SA_RV.txt');
-%    fidSA = fopen(filename,'w');
-%    for i=1:size(RV_new,2)
-%        fprintf(fidSA,'%14.10f \t%14.10f \t%14.10f\n',RV_new(1,i),RV_new(2,i),RV_new(3,i));
-%    end
-%    fclose(fidSA);
-%    
-%    filename = sprintf('SA_EPI.txt');
-%    fidSA = fopen(filename,'w');
-%    for i=1:size(EPI_new,2)
-%        fprintf(fidSA,'%14.10f \t%14.10f \t%14.10f\n',EPI_new(1,i),EPI_new(2,i),EPI_new(3,i));
-%    end
-%    fclose(fidSA);
-% 
 %    filename = sprintf('TV_cir.txt');
 %    fidSA = fopen(filename,'w');
 %    for i=1:size(endo_rv_data,2)
 %        fprintf(fidSA,'%i \t%i \t%14.10f \t%14.10f \t%14.10f\n',1, i, endo_rv_data(1,i),endo_rv_data(2,i),endo_rv_data(3,i));
 %    end
 %    fclose(fidSA);
-%    
-% end
+   
+end
 
 
 
@@ -1114,7 +1120,7 @@ end
 % %%%%%%%%%%%%%%%%
 % %%%   Updated function 
 % 
-function  inter_data=SA_INTERP2(or_data,theta_new)
+function  inter_data=SA_INTERP2(or_data,shortaxis)
 
 lot=length(or_data);
 or_data(1,lot+1)=0.01*or_data(1,lot)+0.99*or_data(1,1);
@@ -1181,15 +1187,23 @@ for i = 1:numPoints-1
 end
 
 %%%%%% find 
-f2=points(:,2)-mean(points(:,2));
-f1=unique(abs(f2));
-v1=1000;
-k1=0;
-while v1>center(1)
-    k1=k1+1;
-    p1=find(abs(f2)==f1(k1));
-    v1=points(p1,1);
+f2=mean(points)-points;
+for i=1:length(f2)
+    costhe=dot(f2(i,:),shortaxis)/norm(f2(i,:));
+    f1(i)=acos(costhe);
 end
+
+[row,p1] = find(f1==min(f1));
+
+% f2=points(:,2)-mean(points(:,2));
+% f1=unique(abs(f2));
+% v1=1000;
+% k1=0;
+% while v1>center(1)
+%     k1=k1+1;
+%     p1=find(abs(f2)==f1(k1));
+%     v1=points(p1,1);
+% end
 
 tarnum=100;
 points_new(1,1)=points(p1,1);
@@ -1230,28 +1244,28 @@ return
 end
 
 
-
-function mediumlayer(or_data)
-    for i=1:divd
-        new_data=[];
-        x=[];y=[];z=[];  %connecting to the base plane
-        x=[endo_pa_data(1:3:size(endo_pa_data),i);  endo_rv_data(rv_base-2,i)];
-        y=[endo_pa_data(2:3:size(endo_pa_data),i);  endo_rv_data(rv_base-1,i)];
-        z=[endo_pa_data(3:3:size(endo_pa_data),i);  endo_rv_data(rv_base,i)];
-
-        xx = makima(z,x,z_int);
-        yy = makima(z,y,z_int);
-
-        new_data=[xx; yy; z_int];
-        %RV_new=[RV_new new_data];
-        PA_new_top=[PA_new_top new_data];
-
-        %plot3(new_data(1,:),new_data(2,:),new_data(3,:),'LineStyle', '-', 'Color', ...
-        %                        'r', 'LineWidth',2)
-    end
-
-    return
-end
+% 
+% function mediumlayer(or_data)
+%     for i=1:divd
+%         new_data=[];
+%         x=[];y=[];z=[];  %connecting to the base plane
+%         x=[endo_pa_data(1:3:size(endo_pa_data),i);  endo_rv_data(rv_base-2,i)];
+%         y=[endo_pa_data(2:3:size(endo_pa_data),i);  endo_rv_data(rv_base-1,i)];
+%         z=[endo_pa_data(3:3:size(endo_pa_data),i);  endo_rv_data(rv_base,i)];
+% 
+%         xx = makima(z,x,z_int);
+%         yy = makima(z,y,z_int);
+% 
+%         new_data=[xx; yy; z_int];
+%         %RV_new=[RV_new new_data];
+%         PA_new_top=[PA_new_top new_data];
+% 
+%         %plot3(new_data(1,:),new_data(2,:),new_data(3,:),'LineStyle', '-', 'Color', ...
+%         %                        'r', 'LineWidth',2)
+%     end
+% 
+%     return
+% end
 
 
 

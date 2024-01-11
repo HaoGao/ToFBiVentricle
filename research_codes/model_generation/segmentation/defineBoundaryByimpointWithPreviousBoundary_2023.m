@@ -1,7 +1,7 @@
 % clear all; close all; clc;
 % updated by Arash
 
-function [xycoor_, hpts]=defineBoundaryByimpoint_2023(imData, bc_data, closeB, str_title)
+function [xycoor_, hpts]=defineBoundaryByimpointWithPreviousBoundary_2023(imData, bc_data, closeB, str_title, lv_p)
 global finish xycoor xcoor ycoor
 finish=0;
 refresh=0;
@@ -16,6 +16,10 @@ if ~isempty(bc_data)
     plot(bc_data(1,:), bc_data(2,:), 'r-', 'LineWidth', 2);
 end
 
+if ~isempty(lv_p)
+    hold on;
+    plot(lv_p(1,:), lv_p(2,:), 'b--', 'LineWidth', 1);
+end
 
 pos_fig = get(gcf,'Position');
 set(0,'units','pixels');Pix_SS =get(0,'screensize');

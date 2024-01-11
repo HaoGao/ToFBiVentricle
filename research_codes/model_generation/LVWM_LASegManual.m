@@ -118,27 +118,27 @@ if segB == 1
                  
                 choice = questdlg('LV endo: Would you like to continue?', ...
                         'Dessert Menu', 'Yes','No','Yes');  
-                [endo_lv, hpts_endo_lv]=defineBoundaryByimpoint_2023(imCropData, [], 0, 'LV endo');
-                        
-                choice = questdlg('RV endo: Would you like to continue?', ...
-                        'Dessert Menu', 'Yes','No','Yes');       
-                switch choice
-                    case 'Yes'
-                       [endo_rv, hpts_endo_rv]=defineBoundaryByimpoint_2023(imCropData, endo_lv, 0, 'RV endo'); 
+                if strcmp(choice, 'Yes')
+                    [endo_lv, hpts_endo_lv]=defineBoundaryByimpoint_2023(imCropData, [], 0, 'LV endo');
+                    endo_sample_lv(1,:) = endo_lv(1,:) +rect(1);
+                    endo_sample_lv(2,:) = endo_lv(2,:) +rect(2);
                 end
-                
-                choice = questdlg('EPI: Would you like to continue?', ...
-                        'Dessert Menu', 'Yes','No','Yes');  
-                [epi_c, hpts_epi_c]=defineBoundaryByimpoint_2023(imCropData, [endo_lv, endo_rv], 0, 'epi bc');
-                         
-                endo_sample_lv(1,:) = endo_lv(1,:) +rect(1);
-                endo_sample_lv(2,:) = endo_lv(2,:) +rect(2);
-                if ~isempty(endo_rv)
+
+                choice = questdlg('RV endo: Would you like to continue?', ...
+                    'Dessert Menu', 'Yes','No','Yes');
+                if strcmp(choice, 'Yes')
+                    [endo_rv, hpts_endo_rv]=defineBoundaryByimpoint_2023(imCropData, endo_lv, 0, 'RV endo');
                     endo_sample_rv(1,:) = endo_rv(1,:) +rect(1);
                     endo_sample_rv(2,:) = endo_rv(2,:) +rect(2);
                 end
-                epi_sample(1,:) = epi_c(1,:) +rect(1);
-                epi_sample(2,:) = epi_c(2,:) +rect(2);
+
+                choice = questdlg('EPI: Would you like to continue?', ...
+                    'Dessert Menu', 'Yes','No','Yes');
+                if strcmp(choice, 'Yes')
+                    [epi_c, hpts_epi_c]=defineBoundaryByimpoint_2023(imCropData, [endo_lv, endo_rv], 0, 'epi bc');
+                    epi_sample(1,:) = epi_c(1,:) +rect(1);
+                    epi_sample(2,:) = epi_c(2,:) +rect(2);
+                end
             
             
                 h1=figure();
