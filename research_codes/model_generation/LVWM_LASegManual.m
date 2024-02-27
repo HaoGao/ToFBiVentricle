@@ -23,7 +23,7 @@ cd(resultDir);
 if ~exist(list_phase{idx},'dir')
     mkdir(list_phase{idx});
     cd(list_phase{idx});
-    phase_resultDir = pwd();    
+    phase_resultDir = pwd();     
 end
 cd(list_phase{idx});
 phase_resultDir = pwd();
@@ -107,100 +107,62 @@ if segB == 1
                 endo_sample_lv = [];
                 endo_sample_rv = [];
                 epi_sample = [];
-                but = 1;
-                n=1;
-                while but ==1 
-                    [x, y, but]=myginput(1,'crosshair');
-                    h2=plot(x,y,'b.');hold on;   
-                    choice = questdlg('LV: Would you like to continue?', ...
-                        'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                    switch choice
-                        case 'Yes'
-                            endo_lv(1,n)=x;
-                            endo_lv(2,n)=y;
-                            n=n+1;
-                        case 'No'
-                            endo_lv(1,n)=x;
-                            endo_lv(2,n)=y;
-                            n=n+1;
-                            break
-                        case 'Delete'
-                            delete(h2)
-                    end
-                    
+                
+                disp('.............................................');
+                disp('predefined boundaries are plotted in red');
+                disp('define points in the boundary by click points')
+                disp('press stop, then click the last point');
+                disp('press replot to generate the curve');
+                disp('whenever change the point position, using replot to regenerate the curve');
+                disp('double press space key to return from boudnary definition');
+                 
+                choice = questdlg('LV endo: Would you like to continue?', ...
+                        'Dessert Menu', 'Yes','No','Yes');  
+                if strcmp(choice, 'Yes')
+                    [endo_lv, hpts_endo_lv]=defineBoundaryByimpoint_2023(imCropData, [], 0, 'LV endo');
+                    endo_sample_lv(1,:) = endo_lv(1,:) +rect(1);
+                    endo_sample_lv(2,:) = endo_lv(2,:) +rect(2);
                 end
-                plot(endo_lv(1,:),endo_lv(2,:),'b');
 
-                but = 1;
-                n=1;
-                while but ==1 
-                    [x, y, but]=myginput(1,'crosshair');
-                    h2=plot(x,y,'y.');hold on;   
-                    choice = questdlg('RV: Would you like to continue?', ...
-                        'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                    switch choice
-                        case 'Yes'
-                            endo_rv(1,n)=x;
-                            endo_rv(2,n)=y;
-                            n=n+1;
-                        case 'No'
-                            endo_rv(1,n)=x;
-                            endo_rv(2,n)=y;
-                            n=n+1;
-                            break
-                        case 'Delete'
-                            delete(h2)
-                    end
-                    
+                choice = questdlg('RV endo: Would you like to continue?', ...
+                    'Dessert Menu', 'Yes','No','Yes');
+                if strcmp(choice, 'Yes')
+                    [endo_rv, hpts_endo_rv]=defineBoundaryByimpoint_2023(imCropData, endo_lv, 0, 'RV endo');
+                    endo_sample_rv(1,:) = endo_rv(1,:) +rect(1);
+                    endo_sample_rv(2,:) = endo_rv(2,:) +rect(2);
                 end
-                plot(endo_rv(1,:),endo_rv(2,:),'y');
-                
-                
-                n=1;but=1;
-                while but==1
-                    [x, y, but]=myginput(1, 'crosshair');
-                    h2=plot(x,y,'r.');hold on;
-                    choice = questdlg('Epi: Would you like to continue?', ...
-                        'Dessert Menu', 'Yes','No','Delete','Yes');
-                    % Handle response
-                    switch choice
-                        case 'Yes'
-                            epi_c(1,n)=x;
-                            epi_c(2,n)=y;
-                            n=n+1;
-                        case 'No'
-                            epi_c(1,n)=x;
-                            epi_c(2,n)=y;
-                            n=n+1;
-                            break
-                        case 'Delete'
-                            delete(h2)
-                    end
+
+                choice = questdlg('EPI: Would you like to continue?', ...
+                    'Dessert Menu', 'Yes','No','Yes');
+                if strcmp(choice, 'Yes')
+                    [epi_c, hpts_epi_c]=defineBoundaryByimpoint_2023(imCropData, [endo_lv, endo_rv], 0, 'epi bc');
+                    epi_sample(1,:) = epi_c(1,:) +rect(1);
+                    epi_sample(2,:) = epi_c(2,:) +rect(2);
                 end
-                plot(epi_c(1,:),epi_c(2,:),'r');
-                
-                endo_sample_lv(1,:) = endo_lv(1,:) +rect(1);
-                endo_sample_lv(2,:) = endo_lv(2,:) +rect(2);
-                endo_sample_rv(1,:) = endo_rv(1,:) +rect(1);
-                endo_sample_rv(2,:) = endo_rv(2,:) +rect(2);
-                epi_sample(1,:) = epi_c(1,:) +rect(1);
-                epi_sample(2,:) = epi_c(2,:) +rect(2);
             
             
                 h1=figure();
-                imshow(imData,[]); hold on;
+                imshow(imCropData,[]); hold on;
                 title(sliceLocationStr);
                 if ~isempty(endo_sample_lv)
-                    plot(endo_sample_lv(1,:),endo_sample_lv(2,:),'b');
+                    bc_interp = samplingBCWithoutIm_interp(endo_sample_lv, 0);
+                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2),'b-');
                 end
                 if ~isempty(endo_sample_rv)
-                    plot(endo_sample_rv(1,:),endo_sample_rv(2,:),'b');
+                    bc_interp = samplingBCWithoutIm_interp(endo_sample_rv, 0);
+                    plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2), 'b-');
                 end
                 if ~isempty(epi_sample)
-                     plot(epi_sample(1,:),epi_sample(2,:),'r');
+                    bc_interp = samplingBCWithoutIm_interp(epi_sample, 0);
+                     plot(bc_interp(1,:)-rect(1),bc_interp(2,:)-rect(2), 'r-');
                 end
+                
+                %save the figure with boundaries
+                cd(phase_resultDir);
+                figure_name = sprintf('LA-%d.png',imIndex);
+                figure(h1);ax=gca;
+                exportgraphics(ax,figure_name,'Resolution',300) 
+                cd(workingDir);
                 
                 if ~isempty(endo_sample_lv)
                     endo_lvReal = TransformCurvesFromImToRealSpace(endo_sample_lv,imInfo);
@@ -254,8 +216,9 @@ end %% segB
 % imFileName = sprintf('%s/%s',dicomDir,imFileName);
 % imData = MRIMapToReal(imFileName);
 
-imData = SXSliceSorted(1,5).SXSlice(timeInstanceSelected).imData;
-imInfo1 = SXSliceSorted(1,5).SXSlice(timeInstanceSelected).imInfo;
+sliceIndex = patientConfigs(1,1).basalSliceIndex+2; % the middle ventrilce
+imData = SXSliceSorted(1,sliceIndex).SXSlice(timeInstanceSelected).imData;
+imInfo1 = SXSliceSorted(1,sliceIndex).SXSlice(timeInstanceSelected).imInfo;
 imInfo = infoExtract(imInfo1);
 imData = MRIMapToRealWithImageAndHeadData(imData, imInfo);
 

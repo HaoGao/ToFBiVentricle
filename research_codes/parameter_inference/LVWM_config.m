@@ -1,17 +1,17 @@
 
 %%%whole lv manual segmentation configuration
 if ispc
-    path(path, '.\segmentation');
-    path(path, '.\BSplineFitting');
-    path(path, '.\meshRelated');
-    path(path, '.\FEMfunctions');
-%     path(path, '.\optimizationFunctions');
-%     path(path, '.\MetricsMeshes');
+    %path(path, '..\model_generation\segmentation');
+    %path(path, '.\BSplineFitting');
+    %path(path, '.\meshRelated');
+    %path(path, '..\model_generation\FEMfunctions');
+    path(path, '.\optimizationFunctions');
+    path(path, '.\MetricsMeshes');
 end
 
 if ismac
-    path(path, './segmentation');
-    path(path, './BSplineFitting');
+    %path(path, './segmentation');
+    %path(path, './BSplineFitting');
     path(path, './meshRelated');
     path(path, './FEMfunctions');
     path(path, './optimizationFunctions');
@@ -22,8 +22,10 @@ workingDir = pwd();
 
 
 %%load the patient config file
-% resultDirRoot = 'D:\HaoGao\PhDs\PhD_Alan\Results';
-% cd(resultDirRoot);
+%%resultDirRoot = 'D:\HaoGao\PhDs\PhD_Alan\Results';
+resultDirRoot = 'D:\BHFToF\workspace\Results';
+cd(resultDirRoot);
+
 if ispc 
     [FileName,PathName,~] = uigetfile('..\..\..\Results\*.m');
 elseif ismac || isunix 

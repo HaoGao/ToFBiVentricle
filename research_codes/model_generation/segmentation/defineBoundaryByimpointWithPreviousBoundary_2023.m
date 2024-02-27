@@ -1,13 +1,14 @@
 % clear all; close all; clc;
+% updated by Arash
 
-function [xycoor_, hpts]=defineBoundaryByimpoint(imData, bc_data, closeB)
+function [xycoor_, hpts]=defineBoundaryByimpointWithPreviousBoundary_2023(imData, bc_data, closeB, str_title, lv_p)
 global finish xycoor xcoor ycoor
 finish=0;
 refresh=0;
-% im = imread('Screen Shot 2017-08-16 at 11.03.16 PM.png');
 
 fig = figure;
-imshow(imData,[]); 
+imshow(imData,[]); hold on;
+title(str_title);
 
 %%then we can plot bc_data 
 if ~isempty(bc_data)
@@ -15,6 +16,10 @@ if ~isempty(bc_data)
     plot(bc_data(1,:), bc_data(2,:), 'r-', 'LineWidth', 2);
 end
 
+if ~isempty(lv_p)
+    hold on;
+    plot(lv_p(1,:), lv_p(2,:), 'b--', 'LineWidth', 1);
+end
 
 pos_fig = get(gcf,'Position');
 set(0,'units','pixels');Pix_SS =get(0,'screensize');
@@ -57,7 +62,7 @@ figData.pIndex = pIndex;
 %%press anykey twice to return to the main function
 %       w = waitforbuttonpress;
       while true
-      if finish==1;
+      if finish==1
           break;
       end
 %       if tb1.Value==1

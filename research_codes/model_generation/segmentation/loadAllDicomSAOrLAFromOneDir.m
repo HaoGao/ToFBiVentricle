@@ -6,5 +6,5 @@ workingDir = pwd();
 
 fileList = scanFilesInDir(dicomDir);
 BloadImageData = 1;
-SXSlice = cineImageExtract(fileList, dicomDir, BloadImageData); 
+SXSlice = cineImageExtract(fileList, dicomDir, BloadImageData);
 

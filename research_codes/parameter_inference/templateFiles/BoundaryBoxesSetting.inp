@@ -1,0 +1,179 @@
+*Part, name=PART-BOX
+*Node
+      1,          45.,          45.,          45.
+      2,          45.,           0.,          45.
+      3,          45.,           0.,           0.
+      4,          45.,          45.,           0.
+      5,           0.,           0.,          45.
+      6,           0.,           0.,           0.
+      7,           0.,          45.,          45.
+      8,           0.,          45.,           0.
+      9,         22.5,         22.5,         22.5
+*Element, type=SFM3D4R
+1, 1, 2, 3, 4
+2, 2, 5, 6, 3
+3, 5, 7, 8, 6
+4, 7, 1, 4, 8
+5, 2, 1, 7, 5
+6, 8, 4, 3, 6
+*Nset, nset=PART-BOX-REFPT_, internal
+ 9,
+*Nset, nset=COMP-BOX, generate
+ 1,  9,  1
+*Elset, elset=COMP-BOX, generate
+ 1,  6,  1
+*Nset, nset=COMP-FIX, generate
+ 5,  8,  1
+*Elset, elset=COMP-FIX
+ 3,
+*Nset, nset=COMP-AXIS, generate
+ 1,  4,  1
+*Elset, elset=COMP-AXIS
+ 1,
+*Elset, elset=_SURF-BOX_SNEG, internal, generate
+ 1,  6,  1
+*Elset, elset=_SURF-FRONT-X_SNEG, internal
+ 1,
+*Elset, elset=_SURF-BACK-X_SNEG, internal
+ 3,
+*Surface, type=ELEMENT, name=SURF-BOX
+_SURF-BOX_SNEG, SNEG
+*Surface, type=ELEMENT, name=SURF-FRONT-X
+_SURF-FRONT-X_SNEG, SNEG
+*Surface, type=ELEMENT, name=SURF-BACK-X
+_SURF-BACK-X_SNEG, SNEG
+** Section: Section-4-COMP-BOX
+*Surface Section, elset=COMP-BOX, density=1e-08
+*End Part
+**  
+**
+** ASSEMBLY
+**
+*Assembly, name=Assembly
+**  
+*Instance, name=PART-1-1, part=PART-1
+*End Instance
+**  
+*Instance, name=PART-BOX-AOR, part=PART-BOX
+        180.,        -135.,           0.
+*End Instance
+**  
+*Instance, name=PART-BOX-RA, part=PART-BOX
+        180.,         -45.,           0.
+*End Instance
+**  
+*Instance, name=PART-BOX-LA, part=PART-BOX
+        180.,         135.,           0.
+*End Instance
+**  
+*Instance, name=PART-BOX-PA, part=PART-BOX
+        180.,          45.,           0.
+*End Instance
+**  
+*Node
+      9,   1.52986252,   1.40088713, -0.842965603
+*Node
+     10,  -40.5486031,   27.1502113,  -1.20068073
+*Node
+      1,         225.,       -112.5,         22.5
+      2,         345.,       -112.5,         22.5
+      3,         225.,        -22.5,         22.5
+      4,         345.,        -22.5,         22.5
+      5,         225.,         67.5,         22.5
+      6,         345.,         67.5,         22.5
+      7,         225.,        157.5,         22.5
+      8,         345.,        157.5,         22.5
+*Element, type=CONN3D2
+1, 1, 2
+*Connector Section, elset=_PickedSet42, behavior=ConnProp-1_CONNSECT-AOR
+Axial,
+*Element, type=CONN3D2
+2, 3, 4
+*Connector Section, elset=_PickedSet44, behavior=ConnProp-2_CONNSECT-RA
+Axial,
+*Element, type=CONN3D2
+3, 5, 6
+*Connector Section, elset=_PickedSet46, behavior=ConnProp-3_CONNSECT-PA
+Axial,
+*Element, type=CONN3D2
+4, 7, 8
+*Connector Section, elset=_PickedSet48, behavior=ConnProp-4_CONNSECT-LA
+Axial,
+*Nset, nset=RP-AOR, instance=PART-BOX-AOR
+ 9,
+*Nset, nset=RP-AORAXIS
+ 1,
+*Nset, nset=RP-AORGROUND
+ 2,
+*Nset, nset=RP-LA, instance=PART-BOX-LA
+ 9,
+*Nset, nset=RP-LAAXIS
+ 7,
+*Nset, nset=RP-LAGROUND
+ 8,
+*Nset, nset=RP-LV-CAV
+ 9,
+*Nset, nset=RP-PA, instance=PART-BOX-PA
+ 9,
+*Nset, nset=RP-PAAXIS
+ 5,
+*Nset, nset=RP-PAGROUND
+ 6,
+*Nset, nset=RP-RA, instance=PART-BOX-RA
+ 9,
+*Nset, nset=RP-RAAXIS
+ 3,
+*Nset, nset=RP-RAGROUND
+ 4,
+*Nset, nset=RP-RV-CAV
+ 10,
+*Nset, nset=WIRE-1-SET-AOR
+ 1, 2
+*Nset, nset=WIRE-2-SET-RA
+ 3, 4
+*Nset, nset=WIRE-3-SET-PA
+ 5, 6
+*Nset, nset=WIRE-4-SET-LA
+ 7, 8
+*Elset, elset=_PickedSet42, internal
+ 1,
+*Elset, elset=_PickedSet44, internal
+ 2,
+*Elset, elset=_PickedSet46, internal
+ 3,
+*Elset, elset=_PickedSet48, internal
+ 4,
+*Surface, type=NODE, name=PART-1-1_MV_CNS_, internal
+PART-1-1.MV, 1.
+*Surface, type=NODE, name=PART-1-1_MV-EDGES_CNS_, internal
+PART-1-1.MV-EDGES, 1.
+*Surface, type=NODE, name=PART-1-1_PV_CNS_, internal
+PART-1-1.PV, 1.
+*Surface, type=NODE, name=PART-1-1_PV-EDGES_CNS_, internal
+PART-1-1.PV-EDGES, 1.
+*Surface, type=NODE, name=PART-1-1_TV_CNS_, internal
+PART-1-1.TV, 1.
+*Surface, type=NODE, name=PART-1-1_TV-EDGES_CNS_, internal
+PART-1-1.TV-EDGES, 1.
+** Constraint: CONSTRAINT-AOR
+*Coupling, constraint name=CONSTRAINT-AOR, ref node=RP-AORAXIS, surface=PART-BOX-AOR.SURF-FRONT-X
+*Kinematic
+** Constraint: CONSTRAINT-LA
+*Coupling, constraint name=CONSTRAINT-LA, ref node=RP-LAAXIS, surface=PART-BOX-LA.SURF-FRONT-X
+*Kinematic
+** Constraint: CONSTRAINT-PA
+*Coupling, constraint name=CONSTRAINT-PA, ref node=RP-PAAXIS, surface=PART-BOX-PA.SURF-FRONT-X
+*Kinematic
+** Constraint: CONSTRAINT-RA
+*Coupling, constraint name=CONSTRAINT-RA, ref node=RP-RAAXIS, surface=PART-BOX-RA.SURF-FRONT-X
+*Kinematic
+** Constraint: Constraint-MV
+*Tie, name=Constraint-MV, adjust=yes
+PART-1-1_MV-EDGES_CNS_, PART-1-1_MV_CNS_
+** Constraint: Constraint-PV
+*Tie, name=Constraint-PV, adjust=yes
+PART-1-1_PV-EDGES_CNS_, PART-1-1_PV_CNS_
+** Constraint: Constraint-TV
+*Tie, name=Constraint-TV, adjust=yes
+PART-1-1_TV-EDGES_CNS_, PART-1-1_TV_CNS_
+*End Assembly
