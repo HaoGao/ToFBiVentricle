@@ -484,8 +484,10 @@ end %% segB
 % imFileName = sprintf('%s/%s',dicomDir,imFileName);
 % imData = MRIMapToReal(imFileName);
 
-imData = SXSliceSorted(1,5).SXSlice(timeInstanceSelected).imData;
-imInfo1 = SXSliceSorted(1,5).SXSlice(timeInstanceSelected).imInfo;
+%imData = SXSliceSorted(1,5).SXSlice(timeInstanceSelected).imData;
+%imInfo1 = SXSliceSorted(1,5).SXSlice(timeInstanceSelected).imInfo;
+imData = SXSliceSorted(1,4).SXSlice(timeInstanceSelected).imData;
+imInfo1 = SXSliceSorted(1,4).SXSlice(timeInstanceSelected).imInfo;
 imInfo = infoExtract(imInfo1);
 imData = MRIMapToRealWithImageAndHeadData(imData, imInfo);
 
@@ -524,13 +526,3 @@ end
 
 imgTecplotOutput(imData,'SAslice3Tec.dat',phase_resultDir);
 %%%this is for apex info
-
-
-
-
-
-
-
-
-
-

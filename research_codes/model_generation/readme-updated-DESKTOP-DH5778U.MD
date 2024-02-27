@@ -9,7 +9,7 @@
 
    manually segment short axial images
    - case 1: LV, RV, EPI, for the bi-ventrilce region
-   - case 2: RV, PA, EPI, not used anymore
+   - case 2: RV, PA, LV, for seperate LV, RV and PA regions
    - case 3: RV, RV EPI, PA, PA EPI, not used
    - case 4: PA, PA EPI, for the RV o utflow tract
 

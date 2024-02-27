@@ -23,7 +23,7 @@ cd(resultDir);
 if ~exist(list_phase{idx},'dir')
     mkdir(list_phase{idx});
     cd(list_phase{idx});
-    phase_resultDir = pwd();    
+    phase_resultDir = pwd();     
 end
 cd(list_phase{idx});
 phase_resultDir = pwd();

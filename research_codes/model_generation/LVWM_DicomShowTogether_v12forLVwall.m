@@ -1,7 +1,7 @@
 %% show the dicom in 3D together for one time instance
 %% updated on 15th May 2023, based on Debao Guan's version 8
 
-clear all;close all;clc;
+clear all;close all;clc;axis equal
 
 LVWM_config;
 Bwritten = 1; %%whether to write out solidworks file
@@ -83,10 +83,12 @@ if patientConfigs(patientIndex,1).Brotation
         - basal_centre.centre_coor);
     LAVec = cross(SAXVec, SAYVec);
     %% find the apex slice to determine the long-axis direction 
-    apex_index = basalSliceIndex+3;
-    LVApexCenterApex = [mean([DataSegSA(1,apex_index).endo_lvReal(1,:)  ]); ...
-        mean([DataSegSA(1,apex_index).endo_lvReal(2,:)  ]);... 
-        mean([DataSegSA(1,apex_index).endo_lvReal(3,:)  ])];
+    %apex_index = basalSliceIndex+3;
+    apex_positionindex=patientConfigs.SASlicePositionApex;%% WL wrote on 9 Feb 2024
+    apex_index=patientConfigs.apicalSliceIndex;%% WL wrote on 9 Feb 2024
+    LVApexCenterApex = [mean([DataSegSA(1,apex_positionindex).endo_lvReal(1,:) DataSegSA(1,apex_positionindex).endo_rvReal(1,:)]); ...
+        mean([DataSegSA(1,apex_positionindex).endo_lvReal(2,:) DataSegSA(1,apex_positionindex).endo_rvReal(2,:)]);... 
+        mean([DataSegSA(1,apex_positionindex).endo_lvReal(3,:) DataSegSA(1,apex_positionindex).endo_rvReal(3,:)])];
     long_axis = NormalizationVec(basal_centre.centre_coor -LVApexCenterApex );
     if dot(LAVec, long_axis)< 0
         LAVec = - LAVec;
@@ -101,6 +103,7 @@ if patientConfigs(patientIndex,1).Brotation
               0 1 0;
               0 0 1];
     RotationMatrix = rightM/leftM;
+    RotationMatrix=RotationMatrix/(det(RotationMatrix))^(1/3);
     
     rotationConfig.SAXVec = SAXVec;
     rotationConfig.SAYVec = SAYVec;
@@ -165,7 +168,7 @@ for imIndex = 1 : size(DataSegLA,2)
 
     if ~isempty(endo_rv)
         plot3(endo_rv(1,:),endo_rv(2,:), endo_rv(3,:),'LineStyle', '-', 'Color', ...
-            'y', 'LineWidth',2);
+            'k', 'LineWidth',2);
     end
 end
 figure(h3D_ori); xlabel('x'); ylabel('y'); zlabel('z'); title('Original BCs');
@@ -316,7 +319,7 @@ if patientConfigs(patientIndex,1).Brotation
         plot3(endo_lv(1,:),endo_lv(2,:), endo_lv(3,:),'LineStyle', '-', 'Color', ...
                     'b', 'LineWidth',2);
         plot3(endo_rv(1,:),endo_rv(2,:), endo_rv(3,:),'LineStyle', '-', 'Color', ...
-                    'y', 'LineWidth',2);
+                    'k', 'LineWidth',2);
         plot3(epi_c(1,:),epi_c(2,:), epi_c(3,:),'LineStyle', '-', 'Color', ...
                     'r', 'LineWidth',2);
 
@@ -574,9 +577,48 @@ hold on
 
 %%%%%%%%%%% interpolation below the base 
 %%%% LV ENDO
-min_z=min(DataSegLARotated(2).endo_lvReal(3,:));  %long axis using the 4-chamber view
+%min_z=min(DataSegLARotated(2).endo_lvReal(3,:));  %long axis using the 4-chamber view
 max_z=endo_lv_data(lv_base,1);  %max(DataSegLARotated(2).endo_lvReal(3,:)); %1.5;%
-apex_n=find(DataSegLARotated(2).endo_lvReal(3,:)==min_z);
+%apex_n=find(DataSegLARotated(2).endo_lvReal(3,:)==min_z);
+%% WL wrote on 9 Feb 2024
+min_z1LV=min(DataSegLARotated(1).endo_lvReal(3,:));  
+min_z2LV=min(DataSegLARotated(2).endo_lvReal(3,:));
+if min_z1LV >= min_z2LV
+    min_zLV=min_z2LV;
+else
+    min_zLV=min_z1LV;
+end 
+min_z1EPI=min(DataSegLARotated(1).epi_cReal(3,:));
+min_z2EPI=min(DataSegLARotated(2).epi_cReal(3,:));
+if min_z1EPI >= min_z2EPI
+    min_zEPI=min_z2EPI;
+else
+    min_zEPI=min_z1EPI;
+end  
+LVCenterPositionApex = [mean(DataSegSARotated(1,apex_positionindex).endo_lvReal(1,:)); ...
+        mean(DataSegSARotated(1,apex_positionindex).endo_lvReal(2,:));... 
+        mean(DataSegSARotated(1,apex_positionindex).endo_lvReal(3,:))];
+LVCenterApex =[mean(DataSegSARotated(1,apex_index).endo_lvReal(1,:)); ...
+        mean(DataSegSARotated(1,apex_index).endo_lvReal(2,:));... 
+        mean(DataSegSARotated(1,apex_index).endo_lvReal(3,:))];
+LVApexVec=NormalizationVec(LVCenterApex -LVCenterPositionApex );
+disp('For LV apex:')
+fprintf('z of SA slice next to apex of LV = %f mm.\n',LVCenterApex(3));
+fprintf('Min z of LA slice of LV = %f mm.\n',min_zLV);
+fprintf('Min z of LA slice of EPI = %f mm.\n',min_zEPI);
+if min_zLV >= LVCenterApex(3)
+fprintf('z of apex should be longer than %f mm but shorter than %f mm.\n',LVCenterApex(3),min_zEPI);
+else
+fprintf('z of apex should be close to %f mm and shorter than %f mm.\n',min_zLV,min_zEPI); 
+end
+prompt = "Please input z coordinate of apex (negative value in mm) = ";
+LVApex(3) = input(prompt);
+
+LVDistanceSAsliceApextoApex=LVApex(3)-LVCenterApex(3); %%unit in mm
+LVApex(1)=LVCenterApex(1)+LVApexVec(1)/LVApexVec(3)*LVDistanceSAsliceApextoApex;
+LVApex(2)=LVCenterApex(2)+LVApexVec(2)/LVApexVec(3)*LVDistanceSAsliceApextoApex;
+min_z=LVApex(3);
+
 z_int= linspace(min_z, max_z, divd/2);
 LV_new=[];
 
@@ -587,10 +629,14 @@ for i=1:divd
     y=endo_lv_data(lv_base-1:3:size(endo_lv_data),i);
     z=endo_lv_data(lv_base:3:size(endo_lv_data),i);
     x_len=length(x);
-    x(x_len+1)=DataSegLARotated(2).endo_lvReal(1,apex_n);
-    y(x_len+1)=DataSegLARotated(2).endo_lvReal(2,apex_n);
-    z(x_len+1)=DataSegLARotated(2).endo_lvReal(3,apex_n);
+    %x(x_len+1)=DataSegLARotated(2).endo_lvReal(1,apex_n);
+    %y(x_len+1)=DataSegLARotated(2).endo_lvReal(2,apex_n);
+    %z(x_len+1)=DataSegLARotated(2).endo_lvReal(3,apex_n);
     
+    x(x_len+1)=LVApex(1);
+    y(x_len+1)=LVApex(2);
+    z(x_len+1)=LVApex(3);
+
     xx = makima(z,x,z_int);
     yy = makima(z,y,z_int);
     
@@ -602,12 +648,42 @@ for i=1:divd
 end
 
 %%%% RV ENDO
-min_z=min(DataSegLARotated(2).endo_rvReal(3,:));
+%min_z=min(DataSegLARotated(2).endo_rvReal(3,:));
 max_z=(endo_rv_data(rv_base,1));%max(DataSegLARotated(2).endo_rvReal(3,:));
-apex_n=find(DataSegLARotated(2).endo_rvReal(3,:)==min_z);
+%apex_n=find(DataSegLARotated(2).endo_rvReal(3,:)==min_z);
+%% WL wrote on 9 Feb 2024
+min_z1RV=min(DataSegLARotated(1).endo_rvReal(3,:));
+min_z2RV=min(DataSegLARotated(2).endo_rvReal(3,:));
+min_zRV=min(min_z1RV,min_z2RV);
+if min_z1RV >= min_z2RV
+    min_zRV=min_z2RV;
+else
+    min_zRV=min_z1RV;
+end 
+RVCenterPositionApex = [mean(DataSegSARotated(1,apex_positionindex).endo_rvReal(1,:)); ...
+    mean(DataSegSARotated(1,apex_positionindex).endo_rvReal(2,:));... 
+    mean(DataSegSARotated(1,apex_positionindex).endo_rvReal(3,:))];
+RVCenterApex =[mean(DataSegSARotated(1,apex_index).endo_rvReal(1,:)); ...
+    mean(DataSegSARotated(1,apex_index).endo_rvReal(2,:));... 
+    mean(DataSegSARotated(1,apex_index).endo_rvReal(3,:))];
+RVApexVec=NormalizationVec(RVCenterApex-RVCenterPositionApex);
+disp('For RV apex:')
+fprintf('z of SA slice next to apex of RV = %f mm.\n',LVCenterApex(3));
+fprintf('Min z of LA slice of RV = %f mm.\n',min_zRV);
+fprintf('Min z of LA slice of EPI = %f mm.\n',min_zEPI);
+if min_zRV >= LVCenterApex(3)
+fprintf('z of apex should be longer than %f mm but shorter than %f mm.\n',LVCenterApex(3),min_zEPI);
+else
+fprintf('z of apex should be longer than %f mm but shorter than %f mm.\n',min_zRV,min_zEPI); 
+end
+prompt = "Please input z coordinate of apex (negative value in mm) = ";
+RVApex(3) = input(prompt);
+RVDistanceSAsliceApextoApex=RVApex(3)-RVCenterApex(3);
+RVApex(1)=RVCenterApex(1)+RVApexVec(1)/RVApexVec(3)*RVDistanceSAsliceApextoApex;
+RVApex(2)=RVCenterApex(2)+RVApexVec(2)/RVApexVec(3)*RVDistanceSAsliceApextoApex;
+min_z=RVApex(3);
 z_int= linspace(min_z, max_z, divd/2);
 RV_new=[];
-
 for i=1:divd
     %new_data=[];
     %x=[];y=[];z=[];
@@ -615,9 +691,13 @@ for i=1:divd
     y=endo_rv_data(rv_base-1:3:size(endo_rv_data),i);
     z=endo_rv_data(rv_base:3:size(endo_rv_data),i);
     x_len=length(x);
-    x(x_len+1)=DataSegLARotated(2).endo_rvReal(1,apex_n);
-    y(x_len+1)=DataSegLARotated(2).endo_rvReal(2,apex_n);
-    z(x_len+1)=DataSegLARotated(2).endo_rvReal(3,apex_n);
+    %x(x_len+1)=DataSegLARotated(2).endo_rvReal(1,apex_n);
+    %y(x_len+1)=DataSegLARotated(2).endo_rvReal(2,apex_n);
+    %z(x_len+1)=DataSegLARotated(2).endo_rvReal(3,apex_n);
+    
+    x(x_len+1)=RVApex(1);
+    y(x_len+1)=RVApex(2);
+    z(x_len+1)=RVApex(3);
     
     xx = makima(z,x,z_int);
     yy = makima(z,y,z_int);
@@ -630,9 +710,30 @@ end
 
 
 %%%% LV EPI to BI EPI
-min_z=min(DataSegLARotated(2).epi_cReal(3,:));
+%min_z=min(DataSegLARotated(2).epi_cReal(3,:));
 max_z=epi_c_data(epi_base,1);%max(DataSegLARotated(2).epi_cReal(3,:));
-apex_n=find(DataSegLARotated(2).epi_cReal(3,:)==min_z);
+%apex_n=find(DataSegLARotated(2).epi_cReal(3,:)==min_z);
+%% WL wrote on 9 Feb 2024
+EPICenterPositionApex = [mean(DataSegSARotated(1,apex_positionindex).epi_cReal(1,:)); ...
+    mean(DataSegSARotated(1,apex_positionindex).epi_cReal(2,:));... 
+    mean(DataSegSARotated(1,apex_positionindex).epi_cReal(3,:))];
+EPICenterApex =[mean(DataSegSARotated(1,apex_index).epi_cReal(1,:)); ...
+    mean(DataSegSARotated(1,apex_index).epi_cReal(2,:));... 
+    mean(DataSegSARotated(1,apex_index).epi_cReal(3,:))];
+EPIApexVec=NormalizationVec(EPICenterApex -EPICenterPositionApex );
+disp('For EPI apex:')
+fprintf('z of SA slice next to apex of RV = %f mm.\n',LVCenterApex(3));
+fprintf('z of apex of LV = %f mm.\n',LVApex(3));
+fprintf('z of apex of RV = %f mm.\n',RVApex(3));
+fprintf('Min z of LA slice of EPI = %f mm.\n',min_zEPI);
+min_ztwoapexes=min(LVApex(3),RVApex(3));
+fprintf('z of apex should be longer than %f mm but close to %f mm.\n',min_ztwoapexes,min_zEPI); 
+prompt = "Please input z coordinate of apex (negative value in mm) = ";
+EPIApex(3) = input(prompt);
+EPIDistanceSAsliceApextoApex=EPIApex(3)-EPICenterApex(3);
+EPIApex(1)=EPICenterApex(1)+EPIApexVec(1)/EPIApexVec(3)*EPIDistanceSAsliceApextoApex;
+EPIApex(2)=EPICenterApex(2)+EPIApexVec(2)/EPIApexVec(3)*EPIDistanceSAsliceApextoApex;
+min_z=EPIApex(3);
 z_int= linspace(min_z, max_z, divd/2);
 EPI_new=[];
 
@@ -643,10 +744,14 @@ for i=1:divd
     y=epi_c_data(epi_base-1:3:size(epi_c_data),i);
     z=epi_c_data(epi_base:3:size(epi_c_data),i);
     x_len=length(x);
-    x(x_len+1)=DataSegLARotated(2).epi_cReal(1,apex_n);
-    y(x_len+1)=DataSegLARotated(2).epi_cReal(2,apex_n);
-    z(x_len+1)=DataSegLARotated(2).epi_cReal(3,apex_n);
-    
+    %x(x_len+1)=DataSegLARotated(2).epi_cReal(1,apex_n);
+    %y(x_len+1)=DataSegLARotated(2).epi_cReal(2,apex_n);
+    %z(x_len+1)=DataSegLARotated(2).epi_cReal(3,apex_n);
+
+    x(x_len+1)=EPIApex(1);
+    y(x_len+1)=EPIApex(2);
+    z(x_len+1)=EPIApex(3);    
+
     xx = makima(z,x,z_int);
     yy = makima(z,y,z_int);
     
@@ -1087,27 +1192,49 @@ end
 
 %%
 
-%%%%  COMPUTE VOLUEM
+%%%%  Compute volume with boundary method
 k=[];
-[k, V_ed_lv] = boundary(LV_new',0.6);
+[k, V_lv] = boundary(LV_new',0.6);
 figure
 trisurf(k,LV_new(1,:),LV_new(2,:),LV_new(3,:),'Facecolor','red','FaceAlpha',0.1)
-V_ed_lv=V_ed_lv/1000
+V_lv=V_lv/1000
 
 k=[];
-[k, V_ed_epi] = boundary(EPI_new',0.6);
+[k, V_epi] = boundary(EPI_new',0.6);
 figure
 trisurf(k,EPI_new(1,:),EPI_new(2,:),EPI_new(3,:),'Facecolor','red','FaceAlpha',0.1)
-V_ed_epi=V_ed_epi/1000
-
-wallvolume=(V_ed_epi-V_ed_lv)
+V_epi=V_epi/1000
 
 k=[];
-[k, V_ed_rv] = boundary(RV_new',0.9);
+[k, V_rv] = boundary(RV_new',0.9);
 figure
 trisurf(k,RV_new(1,:),RV_new(2,:),RV_new(3,:),'Facecolor','red','FaceAlpha',0.1)
-V_ed_rv=V_ed_rv/1000
+V_rv=V_rv/1000
 
+V_wall=(V_epi-V_lv-V_rv)
+
+% convhull method
+
+k=[];
+[k,V_lv_convhull]=convhull(LV_new(1,:),LV_new(2,:),LV_new(3,:));
+figure
+trisurf(k,LV_new(1,:),LV_new(2,:),LV_new(3,:),'Facecolor','blue','FaceAlpha',0.1)
+V_lv_convhull=V_lv_convhull/1000
+
+k=[];
+[k,V_epi_convhull]=convhull(EPI_new(1,:),EPI_new(2,:),EPI_new(3,:));
+figure
+trisurf(k,EPI_new(1,:),EPI_new(2,:),EPI_new(3,:),'Facecolor','blue','FaceAlpha',0.1)
+V_epi_convhull=V_epi_convhull/1000
+
+%k=[];
+%[k,V_rv_convhull]=convhull(RV_new(1,:),RV_new(2,:),RV_new(3,:));
+%V_rv_convhull=V_rv_convhull/1000
+%figure
+%trisurf(k,RV_new(1,:),RV_new(2,:),RV_new(3,:),'Facecolor','blue','FaceAlpha',0.1)
+%V_wall_convhull=(V_epi_convhull-V_lv_convhull-V_rv_convhull)
+
+cd(workingDir);
 
 
 %%  interpolation function short axial vies

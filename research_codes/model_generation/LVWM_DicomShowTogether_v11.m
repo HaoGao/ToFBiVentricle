@@ -1,7 +1,7 @@
 %% show the dicom in 3D together for one time instance
 %% updated on 15th May 2023, based on Debao Guan's version 8
 
-clear all;close all;clc;
+clear all;close all;clc;axis equal
 
 LVWM_config;
 Bwritten = 1; %%whether to write out solidworks file
@@ -83,11 +83,13 @@ if patientConfigs(patientIndex,1).Brotation
         - basal_centre.centre_coor);
     LAVec = cross(SAXVec, SAYVec);
     %% find the apex slice to determine the long-axis direction 
-    apex_index = basalSliceIndex+3;
-    LVApexCenterApex = [mean([DataSegSA(1,apex_index).endo_lvReal(1,:) DataSegSA(1,apex_index).endo_rvReal(1,:)]); ...
-        mean([DataSegSA(1,apex_index).endo_lvReal(2,:) DataSegSA(1,apex_index).endo_rvReal(2,:)]);... 
-        mean([DataSegSA(1,apex_index).endo_lvReal(3,:) DataSegSA(1,apex_index).endo_rvReal(3,:)])];
-    long_axis = NormalizationVec(basal_centre.centre_coor -LVApexCenterApex );
+    %apex_index = basalSliceIndex+3;
+    apex_positionindex=patientConfigs.SASlicePositionApex;%% WL wrote on 7 Feb 2024
+    apex_index=patientConfigs.apicalSliceIndex;%% WL wrote on 7 Feb 2024
+    LVApexCenterApex = [mean([DataSegSA(1,apex_positionindex).endo_lvReal(1,:) DataSegSA(1,apex_positionindex).endo_rvReal(1,:)]); ...
+        mean([DataSegSA(1,apex_positionindex).endo_lvReal(2,:) DataSegSA(1,apex_positionindex).endo_rvReal(2,:)]);... 
+        mean([DataSegSA(1,apex_positionindex).endo_lvReal(3,:) DataSegSA(1,apex_positionindex).endo_rvReal(3,:)])];
+    long_axis = NormalizationVec(basal_centre.centre_coor -LVApexCenterApex);
     if dot(LAVec, long_axis)< 0
         LAVec = - LAVec;
     end
@@ -166,7 +168,7 @@ for imIndex = 1 : size(DataSegLA,2)
 
     if ~isempty(endo_rv)
         plot3(endo_rv(1,:),endo_rv(2,:), endo_rv(3,:),'LineStyle', '-', 'Color', ...
-            'y', 'LineWidth',2);
+            'k', 'LineWidth',2);
     end
 end
 figure(h3D_ori); xlabel('x'); ylabel('y'); zlabel('z'); title('Original BCs');
@@ -317,7 +319,7 @@ if patientConfigs(patientIndex,1).Brotation
         plot3(endo_lv(1,:),endo_lv(2,:), endo_lv(3,:),'LineStyle', '-', 'Color', ...
                     'b', 'LineWidth',2);
         plot3(endo_rv(1,:),endo_rv(2,:), endo_rv(3,:),'LineStyle', '-', 'Color', ...
-                    'y', 'LineWidth',2);
+                    'k', 'LineWidth',2);
         plot3(epi_c(1,:),epi_c(2,:), epi_c(3,:),'LineStyle', '-', 'Color', ...
                     'r', 'LineWidth',2);
 
@@ -552,7 +554,7 @@ end
 figure
 hold on
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%% bellow base plane  where only having lv, rv and epi, around z=0
+%%%%%%%%% below basal plane, i.e. z<=0 there are lv, rv and epi only. 
 
 %%%% find base position, lv_vase is the row index which has z=0
 % closest_1 = interp1(endo_lv_data(:,1),endo_lv_data(:,1),0,'nearest'); %it may not be exact 0 due to computer precision
@@ -575,9 +577,56 @@ hold on
 
 %%%%%%%%%%% interpolation below the base 
 %%%% LV ENDO
-min_z=min(DataSegLARotated(2).endo_lvReal(3,:));  %long axis using the 4-chamber view
+%min_z=min(DataSegLARotated(2).endo_lvReal(3,:));  %long axis using the 4-chamber view
+%apex_n=find(DataSegLARotated(2).endo_lvReal(3,:)==min_z);
 max_z=endo_lv_data(lv_base,1);  %max(DataSegLARotated(2).endo_lvReal(3,:)); %1.5;%
-apex_n=find(DataSegLARotated(2).endo_lvReal(3,:)==min_z);
+
+%% WL wrote on 7-9 Feb 2024
+min_z1LV=min(DataSegLARotated(1).endo_lvReal(3,:));  
+min_z2LV=min(DataSegLARotated(2).endo_lvReal(3,:));
+if min_z1LV >= min_z2LV
+    min_zLV=min_z2LV;
+else
+    min_zLV=min_z1LV;
+end 
+min_z1EPI=min(DataSegLARotated(1).epi_cReal(3,:));
+min_z2EPI=min(DataSegLARotated(2).epi_cReal(3,:));
+if min_z1EPI >= min_z2EPI
+    min_zEPI=min_z2EPI;
+else
+    min_zEPI=min_z1EPI;
+end  
+%min_z=min(min_z1,min_z2);
+%apex_n1=find(DataSegLARotated(1).endo_lvReal(3,:)==min_z1);
+%apex_n2=find(DataSegLARotated(2).endo_lvReal(3,:)==min_z2);
+%if min_z1 >= min_z2
+%    apex_n=apex_n2;
+%else
+%    apex_n=apex_n1;
+%end  
+LVCenterPositionApex = [mean(DataSegSARotated(1,apex_positionindex).endo_lvReal(1,:)); ...
+        mean(DataSegSARotated(1,apex_positionindex).endo_lvReal(2,:));... 
+        mean(DataSegSARotated(1,apex_positionindex).endo_lvReal(3,:))];
+LVCenterApex =[mean(DataSegSARotated(1,apex_index).endo_lvReal(1,:)); ...
+        mean(DataSegSARotated(1,apex_index).endo_lvReal(2,:));... 
+        mean(DataSegSARotated(1,apex_index).endo_lvReal(3,:))];
+LVApexVec=NormalizationVec(LVCenterApex -LVCenterPositionApex );
+disp('For LV apex:')
+fprintf('z of SA slice next to apex of LV = %f mm.\n',LVCenterApex(3));
+fprintf('Min z of LA slice of LV = %f mm.\n',min_zLV);
+fprintf('Min z of LA slice of EPI = %f mm.\n',min_zEPI);
+if min_zLV >= LVCenterApex(3)
+fprintf('z of apex should be longer than %f mm but shorter than %f mm.\n',LVCenterApex(3),min_zEPI);
+else
+fprintf('z of apex should be close to %f mm and shorter than %f mm.\n',min_zLV,min_zEPI); 
+end
+prompt = "Please input z coordinate of apex (negative value in mm) = ";
+LVApex(3) = input(prompt);
+
+LVDistanceSAsliceApextoApex=LVApex(3)-LVCenterApex(3); %%unit in mm
+LVApex(1)=LVCenterApex(1)+LVApexVec(1)/LVApexVec(3)*LVDistanceSAsliceApextoApex;
+LVApex(2)=LVCenterApex(2)+LVApexVec(2)/LVApexVec(3)*LVDistanceSAsliceApextoApex;
+min_z=LVApex(3);
 z_int= linspace(min_z, max_z, divd/2);
 LV_new=[];
 
@@ -588,9 +637,19 @@ for i=1:divd
     y=endo_lv_data(lv_base-1:3:size(endo_lv_data),i);
     z=endo_lv_data(lv_base:3:size(endo_lv_data),i);
     x_len=length(x);
-    x(x_len+1)=DataSegLARotated(2).endo_lvReal(1,apex_n);
-    y(x_len+1)=DataSegLARotated(2).endo_lvReal(2,apex_n);
-    z(x_len+1)=DataSegLARotated(2).endo_lvReal(3,apex_n);
+    
+    %if min_z1 >= min_z2 
+    %x(x_len+1)=DataSegLARotated(2).endo_lvReal(1,apex_n);
+    %y(x_len+1)=DataSegLARotated(2).endo_lvReal(2,apex_n);
+    %z(x_len+1)=DataSegLARotated(2).endo_lvReal(3,apex_n);
+    %else
+    %x(x_len+1)=DataSegLARotated(1).endo_lvReal(1,apex_n);
+    %y(x_len+1)=DataSegLARotated(1).endo_lvReal(2,apex_n);
+    %z(x_len+1)=DataSegLARotated(1).endo_lvReal(3,apex_n);
+    %end 
+    x(x_len+1)=LVApex(1);
+    y(x_len+1)=LVApex(2);
+    z(x_len+1)=LVApex(3);
     
     xx = makima(z,x,z_int);
     yy = makima(z,y,z_int);
@@ -603,9 +662,49 @@ for i=1:divd
 end
 
 %%%% RV ENDO
-min_z=min(DataSegLARotated(2).endo_rvReal(3,:));
+%min_z=min(DataSegLARotated(2).endo_rvReal(3,:));
+%apex_n=find(DataSegLARotated(2).endo_rvReal(3,:)==min_z);
 max_z=(endo_rv_data(rv_base,1));%max(DataSegLARotated(2).endo_rvReal(3,:));
-apex_n=find(DataSegLARotated(2).endo_rvReal(3,:)==min_z);
+
+%% WL wrote on 6-9 Feb 2024
+min_z1RV=min(DataSegLARotated(1).endo_rvReal(3,:));
+min_z2RV=min(DataSegLARotated(2).endo_rvReal(3,:));
+min_zRV=min(min_z1RV,min_z2RV);
+if min_z1RV >= min_z2RV
+    min_zRV=min_z2RV;
+else
+    min_zRV=min_z1RV;
+end 
+%apex_n1=find(DataSegLARotated(1).endo_rvReal(3,:)==min_z1);
+%apex_n2=find(DataSegLARotated(2).endo_rvReal(3,:)==min_z2);
+%if min_z1 >= min_z2
+%    apex_n=apex_n2;
+%else
+%    apex_n=apex_n1;
+%end
+RVCenterPositionApex = [mean(DataSegSARotated(1,apex_positionindex).endo_rvReal(1,:)); ...
+    mean(DataSegSARotated(1,apex_positionindex).endo_rvReal(2,:));... 
+    mean(DataSegSARotated(1,apex_positionindex).endo_rvReal(3,:))];
+RVCenterApex =[mean(DataSegSARotated(1,apex_index).endo_rvReal(1,:)); ...
+    mean(DataSegSARotated(1,apex_index).endo_rvReal(2,:));... 
+    mean(DataSegSARotated(1,apex_index).endo_rvReal(3,:))];
+RVApexVec=NormalizationVec(RVCenterApex -RVCenterPositionApex);
+disp('For RV apex:')
+fprintf('z of SA slice next to apex of RV = %f mm.\n',LVCenterApex(3));
+fprintf('Min z of LA slice of RV = %f mm.\n',min_zRV);
+fprintf('Min z of LA slice of EPI = %f mm.\n',min_zEPI);
+if min_zRV >= LVCenterApex(3)
+fprintf('z of apex should be longer than %f mm but shorter than %f mm.\n',LVCenterApex(3),min_zEPI);
+else
+fprintf('z of apex should be longer than %f mm but shorter than %f mm.\n',min_zRV,min_zEPI); 
+end
+prompt = "Please input z coordinate of apex (negative value in mm) = ";
+RVApex(3) = input(prompt);
+RVDistanceSAsliceApextoApex=RVApex(3)-RVCenterApex(3);
+RVApex(1)=RVCenterApex(1)+RVApexVec(1)/RVApexVec(3)*RVDistanceSAsliceApextoApex;
+RVApex(2)=RVCenterApex(2)+RVApexVec(2)/RVApexVec(3)*RVDistanceSAsliceApextoApex;
+min_z=RVApex(3);
+
 z_int= linspace(min_z, max_z, divd/2);
 RV_new=[];
 
@@ -616,10 +715,22 @@ for i=1:divd
     y=endo_rv_data(rv_base-1:3:size(endo_rv_data),i);
     z=endo_rv_data(rv_base:3:size(endo_rv_data),i);
     x_len=length(x);
-    x(x_len+1)=DataSegLARotated(2).endo_rvReal(1,apex_n);
-    y(x_len+1)=DataSegLARotated(2).endo_rvReal(2,apex_n);
-    z(x_len+1)=DataSegLARotated(2).endo_rvReal(3,apex_n);
     
+    %% WL wrote below on 6 Feb 2024
+    %if min_z1 >= min_z2 
+    %x(x_len+1)=DataSegLARotated(2).endo_rvReal(1,apex_n);
+    %y(x_len+1)=DataSegLARotated(2).endo_rvReal(2,apex_n);
+    %z(x_len+1)=DataSegLARotated(2).endo_rvReal(3,apex_n);
+    %else
+    %x(x_len+1)=DataSegLARotated(1).endo_rvReal(1,apex_n);
+    %y(x_len+1)=DataSegLARotated(1).endo_rvReal(2,apex_n);
+    %z(x_len+1)=DataSegLARotated(1).endo_rvReal(3,apex_n);
+    %end
+    
+    x(x_len+1)=RVApex(1);
+    y(x_len+1)=RVApex(2);
+    z(x_len+1)=RVApex(3);
+
     xx = makima(z,x,z_int);
     yy = makima(z,y,z_int);
     
@@ -631,23 +742,67 @@ end
 
 
 %%%% LV EPI to BI EPI
-min_z=min(DataSegLARotated(2).epi_cReal(3,:));
+%min_z=min(DataSegLARotated(2).epi_cReal(3,:));
+%apex_n=find(DataSegLARotated(2).epi_cReal(3,:)==min_z);
 max_z=epi_c_data(epi_base,1);%max(DataSegLARotated(2).epi_cReal(3,:));
-apex_n=find(DataSegLARotated(2).epi_cReal(3,:)==min_z);
+
+%% WL wrote on 7-9 Feb 2024
+%apex_n1=find(DataSegLARotated(1).epi_cReal(3,:)==min_z1);
+%apex_n2=find(DataSegLARotated(2).epi_cReal(3,:)==min_z2);
+%if min_z1 >= min_z2
+%    apex_n=apex_n2;
+%else
+%    apex_n=apex_n1;
+%end
+EPICenterPositionApex = [mean(DataSegSARotated(1,apex_positionindex).epi_cReal(1,:)); ...
+    mean(DataSegSARotated(1,apex_positionindex).epi_cReal(2,:));... 
+    mean(DataSegSARotated(1,apex_positionindex).epi_cReal(3,:))];
+EPICenterApex =[mean(DataSegSARotated(1,apex_index).epi_cReal(1,:)); ...
+    mean(DataSegSARotated(1,apex_index).epi_cReal(2,:));... 
+    mean(DataSegSARotated(1,apex_index).epi_cReal(3,:))];
+EPIApexVec=NormalizationVec(EPICenterApex -EPICenterPositionApex );
+disp('For EPI apex:')
+fprintf('z of SA slice next to apex of RV = %f mm.\n',LVCenterApex(3));
+fprintf('z of apex of LV = %f mm.\n',LVApex(3));
+fprintf('z of apex of RV = %f mm.\n',RVApex(3));
+fprintf('Min z of LA slice of EPI = %f mm.\n',min_zEPI);
+min_ztwoapexes=min(LVApex(3),RVApex(3));
+fprintf('z of apex should be longer than %f mm but close to %f mm.\n',min_ztwoapexes,min_zEPI); 
+prompt = "Please input z coordinate of apex (negative value in mm) = ";
+EPIApex(3) = input(prompt);
+EPIDistanceSAsliceApextoApex=EPIApex(3)-EPICenterApex(3);
+EPIApex(1)=EPICenterApex(1)+EPIApexVec(1)/EPIApexVec(3)*EPIDistanceSAsliceApextoApex;
+EPIApex(2)=EPICenterApex(2)+EPIApexVec(2)/EPIApexVec(3)*EPIDistanceSAsliceApextoApex;
+min_z=EPIApex(3);
 z_int= linspace(min_z, max_z, divd/2);
 EPI_new=[];
 
 for i=1:divd
     new_data=[];
     x=[];y=[];z=[];
+    %epi_base-2:3:size(epi_c_data)
+    %epi_base-1:3:size(epi_c_data)
+    %epi_base:3:size(epi_c_data)
     x=epi_c_data(epi_base-2:3:size(epi_c_data),i);
-    y=epi_c_data(epi_base-1:3:size(epi_c_data),i);
+    y=epi_c_data(epi_base-1:3:size(epi_c_data),i);  
     z=epi_c_data(epi_base:3:size(epi_c_data),i);
     x_len=length(x);
-    x(x_len+1)=DataSegLARotated(2).epi_cReal(1,apex_n);
-    y(x_len+1)=DataSegLARotated(2).epi_cReal(2,apex_n);
-    z(x_len+1)=DataSegLARotated(2).epi_cReal(3,apex_n);
+
     
+    %if min_z1 >= min_z2
+    %x(x_len+1)=DataSegLARotated(2).epi_cReal(1,apex_n);
+    %y(x_len+1)=DataSegLARotated(2).epi_cReal(2,apex_n);
+    %z(x_len+1)=DataSegLARotated(2).epi_cReal(3,apex_n);
+    %else
+    %x(x_len+1)=DataSegLARotated(1).epi_cReal(1,apex_n);
+    %y(x_len+1)=DataSegLARotated(1).epi_cReal(2,apex_n);
+    %z(x_len+1)=DataSegLARotated(1).epi_cReal(3,apex_n);
+    %end
+    
+    x(x_len+1)=EPIApex(1);
+    y(x_len+1)=EPIApex(2);
+    z(x_len+1)=EPIApex(3);
+
     xx = makima(z,x,z_int);
     yy = makima(z,y,z_int);
     
@@ -831,7 +986,7 @@ if ~isempty(endo_pa_data)
 
 
 
-    %%%% PA-EPI-top
+%%%% PA-EPI-top
 %%%% twice interpolation, first one to get the medium layer between base
 %%%% and the bottom of pa, the second to get the whole pa with base
 
@@ -1085,7 +1240,7 @@ if Bwritten
    
 end
 
-
+cd(workingDir);
 
 %%  interpolation function short axial vies
 

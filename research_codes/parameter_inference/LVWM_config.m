@@ -22,8 +22,10 @@ workingDir = pwd();
 
 
 %%load the patient config file
-% resultDirRoot = 'D:\HaoGao\PhDs\PhD_Alan\Results';
-% cd(resultDirRoot);
+%%resultDirRoot = 'D:\HaoGao\PhDs\PhD_Alan\Results';
+resultDirRoot = 'D:\BHFToF\workspace\Results';
+cd(resultDirRoot);
+
 if ispc 
     [FileName,PathName,~] = uigetfile('..\..\..\Results\*.m');
 elseif ismac || isunix 
